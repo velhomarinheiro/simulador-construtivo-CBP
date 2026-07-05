@@ -200,11 +200,17 @@ def get_oob():
 
 
 def make_bot(kind: str, tuning=None):
-    """Fábrica de bots a partir da seleção da UI."""
+    """
+    Fábrica de bots a partir da seleção da UI.
+
+    Sem ``tuning`` explícito, o heurístico usa a doutrina salva na sessão
+    (página Bots), se houver.
+    """
     from cbp_sim.bots import HeuristicBot, MLBot
     if kind.startswith("ML"):
         pol = st.session_state.get("ml_policies", {})
         return MLBot(pol.get("move"), pol.get("attack"))
+    tuning = tuning or st.session_state.get("bot_tuning")
     return HeuristicBot(tuning) if tuning else HeuristicBot()
 
 

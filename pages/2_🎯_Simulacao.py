@@ -25,13 +25,39 @@ with st.sidebar:
                          "multidomínio (ex.: ASW aéreo contra submarino).")
     max_turns = st.slider("Limite operacional (dias)", 4, 24, 12)
     seed = st.number_input("Semente aleatória", 0, 999_999, 42)
+    fog = st.toggle("Névoa de guerra (detecção limitada)", value=False,
+                    help="Bots só engajam alvos detectados pelos alcances "
+                         "de detecção (noite reduz 1 hex; infraestrutura "
+                         "fixa é sempre conhecida). Sem contato, o Azul "
+                         "assume estações defensivas junto às FPSOs/portos.")
     aggr_blue = st.slider("Agressividade bot Azul", 0.0, 1.0, 1.0, 0.1)
     aggr_red = st.slider("Agressividade bot Vermelho", 0.0, 1.0, 1.0, 0.1)
+    escort = st.slider("Escolta cerrada de FPSOs (Azul)", 0, 4, 0,
+                       help="Combatentes de superfície destacados para "
+                            "empilhar sobre as FPSOs, somando interceptação "
+                            "à defesa do ativo (defesa em grupo). 0 = "
+                            "doutrina original do wargame.")
+    with st.expander("⚡ Guerra cibernética (domínio X)"):
+        st.caption("Estoques por subtipo. O ciber oponente degrada a "
+                   "eficácia cinética via modulador Φ (naval_salvo): "
+                   "ofensiva (C2/WPN), interceptação (SEN/WPN), detecção "
+                   "(SEN/C2) e logística (LOG).")
+        c1, c2 = st.columns(2)
+        blue_cyber, red_cyber = {}, {}
+        with c1:
+            st.markdown("**🔵 Azul**")
+            for s in ("C2", "SEN", "WPN", "LOG"):
+                blue_cyber[s] = st.slider(s, 0, 5, 0, key=f"sim_bc_{s}")
+        with c2:
+            st.markdown("**🔴 Vermelha**")
+            for s in ("C2", "SEN", "WPN", "LOG"):
+                red_cyber[s] = st.slider(s, 0, 5, 0, key=f"sim_rc_{s}")
     run = st.button("▶️ Executar partida", type="primary",
                     use_container_width=True)
 
 if run:
-    blue_bot = make_bot(blue_kind, BotTuning(aggressiveness=aggr_blue))
+    blue_bot = make_bot(blue_kind, BotTuning(aggressiveness=aggr_blue,
+                                             defend_assets=int(escort)))
     red_bot = make_bot(red_kind, BotTuning(aggressiveness=aggr_red))
     snapshots = []
 
@@ -47,7 +73,9 @@ if run:
         state = play_game(
             blue_bot=blue_bot, red_bot=red_bot,
             oob=copy.deepcopy(get_oob()), max_turns=max_turns,
-            stochastic=stochastic, chi=chi, seed=int(seed), on_turn=on_turn)
+            stochastic=stochastic, chi=chi, seed=int(seed),
+            blue_cyber=blue_cyber, red_cyber=red_cyber,
+            fog_of_war=fog, on_turn=on_turn)
     st.session_state["single_game"] = {
         "state_log": state.log,
         "snapshots": snapshots,
@@ -58,7 +86,8 @@ if run:
         "winner": state.winner,
         "config": {"blue": blue_kind, "red": red_kind,
                    "estocástico": stochastic, "χ": chi,
-                   "semente": int(seed)},
+                   "semente": int(seed), "névoa": fog,
+                   "ciber Azul": blue_cyber, "ciber Vermelha": red_cyber},
     }
 
 game = st.session_state.get("single_game")

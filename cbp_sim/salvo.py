@@ -184,6 +184,8 @@ def resolve_salvo(
     chi: float = DEFAULT_CHI,
     adm_matrix: np.ndarray | None = None,
     advantage: bool = False,
+    phi_offense: float = 1.0,
+    phi_defense: float = 1.0,
 ) -> SalvoOutcome:
     """
     Adjudica uma salva pelo modelo multidomínio.
@@ -192,11 +194,16 @@ def resolve_salvo(
     ``defenders_stack`` é a pilha defensora (grupo-tarefa no mesmo hex) que
     soma capacidade de interceptação; se None, apenas o alvo defende.
 
+    ``phi_offense`` (Φ sofrido pelo atacante) modula a letalidade da salva
+    e ``phi_defense`` (Φ sofrido pelo defensor) modula a interceptação —
+    efeitos do domínio cibernético (módulo ``cyber``), conforme o
+    modulador Φ do naval_salvo.
+
     Modos:
     - ``stochastic=True``  — interceptação e dano sorteados das tabelas d6
       do jogo original (mecânica idêntica ao wargame OAS).
     - ``stochastic=False`` — regime determinístico da equação de salva:
-      dano = χ·[n·η_of − z·η_def·λ]_+ (valores esperados).
+      dano = χ·Φ·[n·η_of − z·η_def·λ]_+ (valores esperados).
     """
     profile = WEAPON_PROFILES.get(weapon_type)
     if not profile:
@@ -237,7 +244,7 @@ def resolve_salvo(
         if capacity <= 0:
             continue
         team_def = stack[0].team
-        p_int = intercept_probability(team_def, def_weapon)
+        p_int = intercept_probability(team_def, def_weapon) * phi_defense
         shots = min(remaining, float(capacity))
         if stochastic:
             kills = float(rng.binomial(int(shots), p_int)) if shots >= 1 else 0.0
@@ -267,13 +274,14 @@ def resolve_salvo(
             rolls.append(roll)
             damage += dmg
         det["rolls"] = rolls
-        damage *= chi_coef            # admissibilidade marginal atenua o dano
+        # admissibilidade marginal e Φ ciber atenuam o dano
+        damage *= chi_coef * phi_offense
     else:
-        damage = chi_coef * leakers * lam
+        damage = chi_coef * phi_offense * leakers * lam
         if advantage:
             damage *= 1.15            # bônus de iniciativa (aprox. 2d6-take-max)
 
-    t_atq = chi_coef * launched * lam
+    t_atq = chi_coef * phi_offense * launched * lam
     t_def = chi_coef * expected_intercepted * lam
 
     # Aplica dano: SP da unidade é o poder de permanência (s ≡ 1 hit/SP).

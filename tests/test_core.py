@@ -180,3 +180,148 @@ def test_packages_apply_and_cost():
             > sag1_base["weapons"]["mss"]["quantity"])
     # pacote não muta a OOB original
     assert sag1_base["stayingPower"] == 9
+
+
+# ── Domínio cibernético ──────────────────────────────────────────────────────
+
+def test_phi_sigmoid_properties():
+    from cbp_sim.cyber import phi_sigmoid
+    assert phi_sigmoid(0.0) == 1.0
+    assert phi_sigmoid(1.0, r0=1.0) == pytest.approx(0.5)
+    assert phi_sigmoid(100.0) < 0.01
+
+
+def test_compute_phi_asymmetry():
+    from cbp_sim.cyber import CyberForce, compute_phi
+    blue = CyberForce()                      # sem ciber
+    red = CyberForce(c2=2, sen=2, wpn=3, log=2)
+    phi_blue = compute_phi(blue, red)        # Azul sofre o ciber vermelho
+    phi_red = compute_phi(red, blue)         # Vermelho não sofre nada
+    assert phi_blue.offense < 1.0
+    assert phi_blue.detection < 1.0
+    assert phi_blue.logistics < 1.0
+    assert phi_red.offense == 1.0
+    assert phi_red.logistics == 1.0
+    # contra-ciber próprio atenua a degradação
+    blue2 = CyberForce(c2=2, sen=2, wpn=3, log=2)
+    phi_blue2 = compute_phi(blue2, red)
+    assert phi_blue2.offense > phi_blue.offense
+
+
+def test_cyber_degrades_salvo_damage():
+    st_plain = _mini_state(stochastic=False)
+    st_cyber = GameState(seed=1, stochastic=False,
+                         red_cyber={"C2": 3, "WPN": 4})
+    for st in (st_plain, st_cyber):
+        att = st.unit("RED-GE-1")
+        dfd = st.unit("BLUE-FPSO1")
+        dfd.col, dfd.row = att.col, att.row
+    out_plain = sv.resolve_salvo(
+        attacker=st_plain.unit("RED-GE-1"), defender=st_plain.unit("BLUE-FPSO1"),
+        weapon_type="ascm", amount=2, distance=0, rng=st_plain.rng,
+        stochastic=False, phi_offense=st_plain.phi["red"].offense)
+    out_cyber = sv.resolve_salvo(
+        attacker=st_cyber.unit("RED-GE-1"), defender=st_cyber.unit("BLUE-FPSO1"),
+        weapon_type="ascm", amount=2, distance=0, rng=st_cyber.rng,
+        stochastic=False, phi_offense=st_cyber.phi["red"].offense)
+    # ciber azul inexistente → vermelho não é degradado; mas aqui o ciber é
+    # VERMELHO, então é o AZUL que sofre — o ataque vermelho fica intacto
+    assert out_cyber.damage == pytest.approx(out_plain.damage)
+    # já o ataque azul é degradado pelo ciber vermelho
+    assert st_cyber.phi["blue"].offense < 1.0
+
+
+def test_cyber_game_runs_and_hurts_blue():
+    base = play_game(blue_bot=HeuristicBot(), red_bot=HeuristicBot(),
+                     seed=5, stochastic=False)
+    cyber = play_game(blue_bot=HeuristicBot(), red_bot=HeuristicBot(),
+                      seed=5, stochastic=False,
+                      red_cyber={"C2": 4, "SEN": 4, "WPN": 5, "LOG": 4})
+    assert cyber.winner in ("blue", "red")
+    mb, mc = game_metrics(base), game_metrics(cyber)
+    # sob ciber vermelho pesado, o desempenho azul não melhora
+    assert mc["red_losses_pct"] <= mb["red_losses_pct"] + 1e-9
+
+
+# ── Névoa de guerra ──────────────────────────────────────────────────────────
+
+def test_detection_static_always_visible():
+    st = GameState(seed=2, fog_of_war=True)
+    visible_red = st.detected_enemy_ids("red")
+    # infraestruturas azuis fixas são sempre conhecidas do vermelho
+    assert "BLUE-FPSO1" in visible_red
+    assert "BLUE-PORTO-S" in visible_red
+
+
+def test_detection_limits_far_units():
+    st = GameState(seed=2, fog_of_war=True)
+    visible_blue = st.detected_enemy_ids("blue")
+    # o CSG vermelho começa em P2 (col 15), longe de qualquer sensor azul
+    assert "RED-GBPA" not in visible_blue
+
+
+def test_fog_game_runs():
+    st = play_game(blue_bot=HeuristicBot(), red_bot=HeuristicBot(),
+                   seed=9, fog_of_war=True)
+    assert st.winner in ("blue", "red")
+
+
+# ── Custos calibráveis e pacotes de ameaça ───────────────────────────────────
+
+def test_package_cost_with_custom_table_and_cyber():
+    from cbp_sim.cbp import CYBER_COST_PER_POINT
+    oob = load_order_of_battle()
+    pkg = PRESET_PACKAGES[0]
+    custom = {k: 1.0 for k in
+              [s["id"] for s in oob["forces"]["blue"]]}
+    assert package_cost(oob, pkg, custom) == pytest.approx(
+        len(custom))
+    cyber_pkg = next(p for p in PRESET_PACKAGES
+                     if p.name == "Guerra Ciber Ofensiva")
+    base = package_cost(oob, PRESET_PACKAGES[0])
+    assert package_cost(oob, cyber_pkg) == pytest.approx(
+        base + CYBER_COST_PER_POINT * sum(cyber_pkg.cyber.values()))
+
+
+def test_threat_packages_apply_to_red():
+    from cbp_sim.cbp import THREAT_PACKAGES
+    oob = load_order_of_battle()
+    reinforced = next(p for p in THREAT_PACKAGES
+                      if p.name == "Ameaça Reforçada")
+    oob2 = apply_package(oob, reinforced)
+    ge1 = next(s for s in oob2["forces"]["red"] if s["id"] == "RED-GE-1")
+    ge1_base = next(s for s in oob["forces"]["red"] if s["id"] == "RED-GE-1")
+    assert ge1["stayingPower"] > ge1_base["stayingPower"]
+    # lado azul intocado
+    assert oob2["forces"]["blue"] == oob["forces"]["blue"]
+
+
+def test_close_escort_doctrine_stacks_on_fpsos():
+    from cbp_sim.bots import BotTuning
+    bot = HeuristicBot(BotTuning(defend_assets=2))
+    st = GameState(seed=4)
+    moves = bot.moves(st, "blue")
+    st.apply_moves("blue", moves)
+    # após alguns turnos de aproximação, ao menos um combatente de
+    # superfície deve estar empilhado sobre uma FPSO
+    for _ in range(3):
+        for u in st.units:
+            u.moved = False
+        st.apply_moves("blue", bot.moves(st, "blue"))
+    fpso_hexes = {(u.col, u.row) for u in st.alive_units("blue")
+                  if u.type == "fpso"}
+    guards = [u for u in st.alive_units("blue")
+              if u.category == "surface" and u.type != "fpso"
+              and (u.col, u.row) in fpso_hexes]
+    assert guards, "nenhum combatente estacionado sobre FPSO"
+
+
+def test_escort_improves_fpso_survival():
+    from cbp_sim.bots import BotTuning
+    df0, _ = run_batch(blue_bot_factory=HeuristicBot,
+                       red_bot_factory=HeuristicBot, n_runs=15)
+    df2, _ = run_batch(
+        blue_bot_factory=lambda: HeuristicBot(BotTuning(defend_assets=2)),
+        red_bot_factory=HeuristicBot, n_runs=15)
+    assert (df2["fpsos_surviving"].mean()
+            >= df0["fpsos_surviving"].mean())

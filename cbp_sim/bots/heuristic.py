@@ -33,6 +33,11 @@ class BotTuning:
     logistics_flee_radius: int = 4   # logística foge de combatentes a este raio
     stop_hp_frac: float = 0.4        # recua abaixo desta fração de SP
     finish_hp_threshold: float = 2.0  # ...exceto se o alvo está a isto de cair
+    # Doutrina de escolta cerrada: nº de combatentes de superfície destacados
+    # para empilhar sobre ativos críticos próprios (FPSOs), somando sua
+    # capacidade de interceptação à defesa do ativo (defesa em grupo).
+    # 0 = doutrina original do wargame (sem escolta dedicada de ativos).
+    defend_assets: int = 0
 
 
 COMBATANT_TYPES = {"carrier", "amphib", "fragata", "destroier", "corveta",
@@ -183,12 +188,34 @@ class HeuristicBot:
     def _path_dicts(path: list) -> list[dict]:
         return [{"col": c, "row": r} for c, r in path]
 
+    # ── Névoa de guerra ──────────────────────────────────────────────────────
+    @staticmethod
+    def _visible_enemies(state: GameState, team: str) -> list[Unit]:
+        """Inimigos considerados no planejamento (todos, ou só detectados)."""
+        enemies = [u for u in state.alive_units() if u.team != team]
+        if not state.fog_of_war:
+            return enemies
+        detected = state.detected_enemy_ids(team)
+        return [e for e in enemies if e.id in detected]
+
+    def _defensive_station(self, unit: Unit, state: GameState) -> Unit | None:
+        """
+        Sem contato sob névoa: combatente azul assume estação defensiva
+        junto à infraestrutura crítica (FPSO/porto) mais próxima ainda viva.
+        """
+        assets = [u for u in state.alive_units(unit.team)
+                  if u.type in ("fpso", "porto")]
+        # O BFS de movimento respeita o terreno: a unidade estaciona no hex
+        # legal mais próximo do ativo (adjacente, no caso de portos em terra).
+        return min(assets, key=lambda a: hx.hex_dist(unit.col, unit.row,
+                                                     a.col, a.row),
+                   default=None)
+
     # ── Interface do bot ─────────────────────────────────────────────────────
     def moves(self, state: GameState, team: str) -> list[dict]:
         moves: list[dict] = []
         handled: set[str] = set()
-        enemies = state.alive_units()
-        enemies = [u for u in enemies if u.team != team]
+        enemies = self._visible_enemies(state, team)
         own = [u for u in state.alive_units(team) if not u.moved]
         obj_w = self.objective_weights(state, team)
         enemy_combatants = [e for e in enemies if is_combatant(e)]
@@ -241,6 +268,34 @@ class HeuristicBot:
                                       "path": self._path_dicts(path)})
                 handled.add(escort.id)
 
+        # 2b. Escolta cerrada de ativos críticos (doutrina configurável):
+        # destaca combatentes de superfície com defesa aérea para empilhar
+        # sobre as FPSOs vivas — a pilha soma interceptação (defesa em grupo).
+        if self.tuning.defend_assets > 0 and team == "blue":
+            assets = [u for u in state.alive_units(team) if u.type == "fpso"]
+            guards = [u for u in own
+                      if is_combatant(u) and u.category == "surface"
+                      and mobile(u) and u.id not in handled
+                      and u.weapon_quantity("airDefense") > 0]
+            guards.sort(key=lambda g: min(
+                (hx.hex_dist(g.col, g.row, a.col, a.row) for a in assets),
+                default=0))
+            assigned: set[str] = set()
+            for guard in guards[:self.tuning.defend_assets]:
+                free = [a for a in assets if a.id not in assigned]
+                if not free:
+                    break
+                asset = min(free, key=lambda a: hx.hex_dist(
+                    guard.col, guard.row, a.col, a.row))
+                assigned.add(asset.id)
+                handled.add(guard.id)
+                if (guard.col, guard.row) == (asset.col, asset.row):
+                    continue                      # já em estação
+                path = self.move_toward(guard, asset)
+                if path and len(path) >= 2:
+                    moves.append({"unitId": guard.id,
+                                  "path": self._path_dicts(path)})
+
         # 3. Demais unidades
         for unit in own:
             if unit.id in handled or not mobile(unit):
@@ -256,6 +311,20 @@ class HeuristicBot:
                 continue
             target = self.pick_target(unit, enemies, obj_w)
             if target is None:
+                # Névoa: sem contato, combatentes assumem estação defensiva
+                # junto à infraestrutura crítica (Azul defende; Vermelho
+                # sempre "vê" as infraestruturas fixas, então chega aqui
+                # apenas sem alvo engajável).
+                if (state.fog_of_war and team == "blue"
+                        and is_combatant(unit)):
+                    station = self._defensive_station(unit, state)
+                    if station is not None and hx.hex_dist(
+                            unit.col, unit.row, station.col,
+                            station.row) > 0:
+                        path = self.move_toward(unit, station)
+                        if path and len(path) >= 2:
+                            moves.append({"unitId": unit.id,
+                                          "path": self._path_dicts(path)})
                 continue
             dist = hx.hex_dist(unit.col, unit.row, target.col, target.row)
             atk_r = unit.range_against(target.category)
@@ -272,7 +341,7 @@ class HeuristicBot:
     def attacks(self, state: GameState, team: str) -> list[dict]:
         attacks: list[dict] = []
         obj_w = self.objective_weights(state, team)
-        enemies = [u for u in state.alive_units() if u.team != team]
+        enemies = self._visible_enemies(state, team)
         for unit in state.alive_units(team):
             if not unit.can_attack():
                 continue

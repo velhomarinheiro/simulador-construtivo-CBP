@@ -30,7 +30,9 @@ python -m pytest tests/ -q
 |---|---|
 | Mecânica de jogo (mapa hex 16×10, turnos dia/noite, movimentação simultânea, rodadas de batalha com contra-ataque em grupo, logística, objetivos assimétricos) | wargame **Operação Atlântico Sul** (repos `wargame-naval` / `simulacao-construtiva-OAS`) |
 | Adjudicação de engajamentos | **Equação de salva multidomínio** (repo `naval_salvo`): `ΔSP = (1/s)·𝟙⁽ᵈ'ᵈ⁾·[T_atq − T_def]₊`, com matriz de admissibilidade 5×5 (S/U/A/C/X) e nível marginal χ calibrável; letalidade e interceptação calibradas nas tabelas d6 do jogo original (modos estocástico e determinístico) |
-| Bot heurístico | Porte da IA do modo solo do wargame (doutrina orientada a objetivos, proteção de logística, gerência de combustível) |
+| Domínio cibernético (X) | Modulador **Φ** do `naval_salvo` (eq. 12): `Φ(R)=1/[1+(R/r₀)^k]` sobre a razão de força ciber do oponente, por canal — ofensiva (C2/WPN), interceptação (SEN/WPN), detecção (SEN/C2) e logística (LOG); estoques por subtipo com contra-ciber próprio |
+| Névoa de guerra (opcional) | Detecção por alcances por categoria (noite −1 hex; infraestrutura fixa sempre conhecida; Φ ciber degrada sensores); ataques exigem alvo detectado e, sem contato, o Azul assume estações defensivas junto às FPSOs/portos |
+| Bot heurístico | Porte da IA do modo solo do wargame (doutrina orientada a objetivos, proteção de logística, gerência de combustível) + doutrina configurável de **escolta cerrada** de ativos críticos (defesa em grupo por empilhamento) |
 | Bot de aprendizado de máquina | Clonagem comportamental inspirada em `ml/train_bot.py`: estado 9×10×16 → redes de pontuação dos 160 hexes (movimento e ataque), em numpy puro |
 
 ## Estrutura
@@ -38,8 +40,9 @@ python -m pytest tests/ -q
 | Caminho | Conteúdo |
 |---|---|
 | `app.py` + `pages/` | Interface Streamlit (Cenário, Simulação, Monte Carlo, Análise CBP, Bots, Relatórios) |
-| `cbp_sim/engine.py` | Motor do jogo (estado, turnos, combate, objetivos, vitória) |
+| `cbp_sim/engine.py` | Motor do jogo (estado, turnos, combate, objetivos, vitória, detecção) |
 | `cbp_sim/salvo.py` | Equação de salva multidomínio e matriz de admissibilidade |
+| `cbp_sim/cyber.py` | Domínio cibernético — modulador Φ por canal |
 | `cbp_sim/hexmap.py` | Grade hexagonal odd-q e terrenos do teatro |
 | `cbp_sim/bots/` | Bot heurístico e bot ML (clonagem comportamental) |
 | `cbp_sim/montecarlo.py` | Lotes de replicações e MOEs |
@@ -56,9 +59,12 @@ python -m pytest tests/ -q
 3. **Monte Carlo** — replicações com sementes controladas; distribuição das
    MOEs (P(vitória), sobrevivência das FPSOs, integridade portuária, perdas,
    razão de troca, duração).
-4. **Análise CBP** — pacotes de força alternativos (presets + personalizados),
-   eficácia composta ponderada, custo-efetividade e perfil radar de
-   capacidades; relatório comparativo para download.
+4. **Análise CBP** — pacotes de força alternativos (presets + personalizados,
+   incluindo opções cibernéticas e A2/AD) avaliados contra **pacotes de
+   ameaça** (variantes da Força Vermelha); eficácia composta ponderada,
+   custo-efetividade com **tabela de custos calibrável** (editor +
+   upload/download) e perfil radar de capacidades; relatório comparativo
+   para download.
 5. **Bots** — ajuste da doutrina heurística; geração de dataset por self-play
    e treino do bot ML; avaliação ML × heurístico.
 6. **Relatórios e Dados** — exportação (Markdown/CSV/JSON/JSONL) e importação

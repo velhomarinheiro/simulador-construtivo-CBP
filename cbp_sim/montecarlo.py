@@ -69,6 +69,8 @@ def run_batch(*,
               stochastic: bool = True,
               chi: float = 0.5,
               base_seed: int = 0,
+              blue_cyber=None, red_cyber=None,
+              fog_of_war: bool = False,
               collect_events: bool = False,
               progress: Optional[Callable[[int, int], None]] = None):
     """
@@ -82,7 +84,9 @@ def run_batch(*,
         state = play_game(
             blue_bot=blue_bot_factory(), red_bot=red_bot_factory(),
             oob=copy.deepcopy(oob), max_turns=max_turns,
-            stochastic=stochastic, chi=chi, seed=base_seed + k)
+            stochastic=stochastic, chi=chi, seed=base_seed + k,
+            blue_cyber=blue_cyber, red_cyber=red_cyber,
+            fog_of_war=fog_of_war)
         m = game_metrics(state)
         m["run"] = k
         m["seed"] = base_seed + k

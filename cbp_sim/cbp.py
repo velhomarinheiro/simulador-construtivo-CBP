@@ -64,6 +64,9 @@ CAPABILITY_AREAS = {
 }
 
 
+#: Custo ilustrativo por ponto de estoque cibernético (equipe/capacidade).
+CYBER_COST_PER_POINT = 0.4
+
 @dataclass
 class ForcePackage:
     """
@@ -72,12 +75,15 @@ class ForcePackage:
     ``modifications`` mapeia unit_id → fator de escala aplicado ao grupo:
     0 remove o grupo; 1 mantém; 1.5 reforça em ~50% (SP, armas e
     capacidades escalados). ``additions`` são specs completas de novos
-    grupos-tarefa a incluir.
+    grupos-tarefa a incluir. ``cyber`` é o estoque cibernético do pacote
+    por subtipo ({"C2":…, "SEN":…, "WPN":…, "LOG":…}), com custo de
+    ``CYBER_COST_PER_POINT`` UC por ponto.
     """
     name: str
     description: str = ""
     modifications: dict = field(default_factory=dict)
     additions: list = field(default_factory=list)
+    cyber: dict = field(default_factory=dict)
     side: str = "blue"
 
 
@@ -111,24 +117,34 @@ def apply_package(oob: dict, pkg: ForcePackage) -> dict:
     return out
 
 
-def package_cost(oob: dict, pkg: ForcePackage) -> float:
-    """Custo ilustrativo do pacote (grupos presentes × escala)."""
+def package_cost(oob: dict, pkg: ForcePackage,
+                 cost_table: dict | None = None) -> float:
+    """
+    Custo ilustrativo do pacote (grupos presentes × escala + ciber).
+
+    ``cost_table`` permite substituir os custos padrão (``UNIT_COSTS``)
+    por uma tabela calibrada pelo usuário.
+    """
+    costs = cost_table if cost_table is not None else UNIT_COSTS
     total = 0.0
     for spec in oob["forces"][pkg.side]:
-        base = UNIT_COSTS.get(spec["id"], 0.0)
+        base = float(costs.get(spec["id"], 0.0))
         factor = pkg.modifications.get(spec["id"], 1.0)
         if factor > 0:
             total += base * factor
     for extra in pkg.additions:
-        total += float(extra.get("cost", UNIT_COSTS.get(extra.get("id"), 0.0)))
+        total += float(extra.get("cost", costs.get(extra.get("id"), 0.0)))
+    total += CYBER_COST_PER_POINT * sum(pkg.cyber.values())
     return total
 
 
-def capability_profile(oob: dict, side: str = "blue") -> dict[str, float]:
+def capability_profile(oob: dict, side: str = "blue",
+                       cyber: dict | None = None) -> dict[str, float]:
     """Agrega o perfil de capacidades de uma força (p/ gráfico radar)."""
     profile = {}
     for area, fn in CAPABILITY_AREAS.items():
         profile[area] = float(sum(fn(u) for u in oob["forces"][side]))
+    profile["Cibernética"] = float(sum((cyber or {}).values()))
     return profile
 
 
@@ -170,4 +186,55 @@ PRESET_PACKAGES: list[ForcePackage] = [
         description="Excursão de restrição orçamentária: sem SAG-2, sem "
                     "2º grupo de patrulha oceânica e sem 3º submarino.",
         modifications={"BLUE-SAG-S2": 0, "BLUE-PAT-O2": 0, "BLUE-SUB-3": 0}),
+    ForcePackage(
+        name="Capacidade Ciber Defensiva",
+        description="Força base + contra-ciber (SEN/C2/LOG defensivos) — "
+                    "protege detecção, interceptação e logística próprias "
+                    "a custo baixo.",
+        cyber={"C2": 2, "SEN": 3, "WPN": 1, "LOG": 2}),
+    ForcePackage(
+        name="Guerra Ciber Ofensiva",
+        description="Força base + ciber ofensivo pesado (WPN/C2) — degrada "
+                    "a eficácia cinética e a logística do adversário via "
+                    "modulador Φ.",
+        cyber={"C2": 3, "SEN": 2, "WPN": 4, "LOG": 3}),
+    ForcePackage(
+        name="A2/AD Integrada",
+        description="Negação de área integrada: baterias costeiras e ADA "
+                    "dobradas, submarinos reforçados e ciber defensivo — "
+                    "aposta em defesa em camadas sem reforço da esquadra "
+                    "de superfície.",
+        modifications={"BLUE-DCOST1": 2.0, "BLUE-DCOST2": 2.0,
+                       "BLUE-ADA-1": 2.0, "BLUE-ADA-2": 2.0,
+                       "BLUE-SUB-1": 1.5, "BLUE-SUB-2": 1.5,
+                       "BLUE-SUB-3": 1.5},
+        cyber={"C2": 1, "SEN": 2, "WPN": 1, "LOG": 1}),
+]
+
+
+# ── Pacotes de ameaça (variantes da Força Vermelha) ──────────────────────────
+
+THREAT_PACKAGES: list[ForcePackage] = [
+    ForcePackage(
+        name="Ameaça Base", side="red",
+        description="Força expedicionária de referência da Operação "
+                    "Atlântico Sul."),
+    ForcePackage(
+        name="Ameaça Reforçada", side="red",
+        description="Escoltas e aviação embarcada reforçadas (+50%) — "
+                    "testa a robustez do pacote azul contra um cenário "
+                    "de ameaça agravado.",
+        modifications={"RED-GE-1": 1.5, "RED-GE-2": 1.5, "RED-GE-3": 1.5,
+                       "RED-KMF-1": 1.5, "RED-KMF-2": 1.5}),
+    ForcePackage(
+        name="Ameaça com Ciber", side="red",
+        description="Força vermelha base com capacidade cibernética "
+                    "ofensiva significativa (assimetria ciber do cenário "
+                    "Bacia de Campos do naval_salvo).",
+        cyber={"C2": 2, "SEN": 2, "WPN": 3, "LOG": 2}),
+    ForcePackage(
+        name="Ameaça Submarina", side="red",
+        description="SSN reforçado e segundo submarino convencional — "
+                    "pressão submarina sobre a logística azul.",
+        modifications={"RED-KSN": 1.5, "RED-KS-1": 2.0}),
 ]

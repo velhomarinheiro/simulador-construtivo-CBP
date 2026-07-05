@@ -74,9 +74,10 @@ with m1:
     Porte fiel do wargame **Operação Atlântico Sul**: grade hexagonal com
     terrenos, turnos com períodos diurno/noturno (limite operacional de 12
     dias), movimentação simultânea, rodadas de batalha com contra-ataque em
-    grupo, logística (combustível, recompletamento em portos/bases) e
-    vitória por objetivos assimétricos — Azul precisa de 3 de 5 objetivos;
-    Vermelho, de seus 2.
+    grupo, logística (combustível, recompletamento em portos/bases),
+    **névoa de guerra opcional** (detecção por categoria, reduzida à noite)
+    e vitória por objetivos assimétricos — Azul precisa de 3 de 5
+    objetivos; Vermelho, de seus 2.
     """)
 with m2:
     st.markdown("""
@@ -85,7 +86,9 @@ with m2:
     `ΔSP = (1/s)·𝟙⁽ᵈ'ᵈ⁾·[T_atq − T_def]₊`, com matriz de admissibilidade
     5×5 entre domínios (superfície, submarino, aéreo, costeiro, ciber) e
     nível marginal χ calibrável. Letalidade e interceptação calibradas nas
-    tabelas do jogo original; modos estocástico e determinístico.
+    tabelas do jogo original; modos estocástico e determinístico. O
+    **domínio cibernético** atua pelo modulador Φ, degradando ofensiva,
+    interceptação, detecção e logística do oponente.
     """)
 with m3:
     st.markdown("""

@@ -38,16 +38,23 @@ with tab_h:
                             t.opportunity_radius)
     flee = c3.slider("Raio de fuga da logística (hex)", 1, 8,
                      t.logistics_flee_radius)
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     stop_frac = c1.slider("Recuar abaixo de (fração de SP)", 0.1, 0.9,
                           t.stop_hp_frac, 0.05)
     finish = c2.slider("...exceto se alvo a (SP) de cair", 0.0, 5.0,
                        float(t.finish_hp_threshold), 0.5)
+    escort = c3.slider("Escolta cerrada de FPSOs (Azul)", 0, 4,
+                       int(t.defend_assets),
+                       help="Combatentes de superfície destacados para "
+                            "empilhar sobre as FPSOs, somando interceptação "
+                            "à defesa do ativo. 0 = doutrina original. "
+                            "Alavanca de análise: mais escolta protege a "
+                            "infraestrutura, mas drena a força ofensiva.")
     if st.button("Salvar doutrina", type="primary"):
         st.session_state["bot_tuning"] = BotTuning(
             aggressiveness=aggressiveness, opportunity_radius=int(opportunity),
             logistics_flee_radius=int(flee), stop_hp_frac=stop_frac,
-            finish_hp_threshold=finish)
+            finish_hp_threshold=finish, defend_assets=int(escort))
         st.success("Doutrina do bot heurístico atualizada.")
 
 # ── Treinamento ML ────────────────────────────────────────────────────────────

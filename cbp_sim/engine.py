@@ -24,6 +24,7 @@ import numpy as np
 
 from . import hexmap as hx
 from . import salvo as sv
+from .cyber import CyberForce, PhiFactors, compute_phi
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -275,7 +276,10 @@ class GameState:
                  max_turns: int = MAX_TURNS_DEFAULT,
                  stochastic: bool = True,
                  chi: float = sv.DEFAULT_CHI,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 blue_cyber: Optional[CyberForce | dict] = None,
+                 red_cyber: Optional[CyberForce | dict] = None,
+                 fog_of_war: bool = False):
         oob = oob or load_order_of_battle()
         self.units: list[Unit] = (
             [Unit("blue", s) for s in oob["forces"]["blue"]]
@@ -292,6 +296,24 @@ class GameState:
         self.log: list[str] = [f"──── Turno 1 · Período Diurno ────"]
         self.events: list[dict] = []        # trilha JSONL p/ ML e auditoria
         self.engagement_records: list[dict] = []
+        self.fog_of_war = fog_of_war
+
+        # ── Domínio cibernético: Φ que cada força SOFRE (do ciber oponente) ──
+        self.blue_cyber = (blue_cyber if isinstance(blue_cyber, CyberForce)
+                           else CyberForce.from_dict(blue_cyber))
+        self.red_cyber = (red_cyber if isinstance(red_cyber, CyberForce)
+                          else CyberForce.from_dict(red_cyber))
+        self.phi: dict[str, PhiFactors] = {
+            "blue": compute_phi(self.blue_cyber, self.red_cyber),
+            "red": compute_phi(self.red_cyber, self.blue_cyber),
+        }
+        if self.blue_cyber.total or self.red_cyber.total:
+            pb, pr = self.phi["blue"], self.phi["red"]
+            self._log(f"⚡ Guerra cibernética ativa — Φ Azul (of/def/det/log): "
+                      f"{pb.offense:.2f}/{pb.defense:.2f}/"
+                      f"{pb.detection:.2f}/{pb.logistics:.2f} · Φ Vermelha: "
+                      f"{pr.offense:.2f}/{pr.defense:.2f}/"
+                      f"{pr.detection:.2f}/{pr.logistics:.2f}")
 
     # ── Consultas ────────────────────────────────────────────────────────────
     def unit(self, unit_id: str) -> Optional[Unit]:
@@ -307,6 +329,39 @@ class GameState:
 
     def _log(self, msg: str):
         self.log.append(msg)
+
+    # ── Detecção / névoa de guerra ────────────────────────────────────────────
+    STATIC_TYPES = ("fpso", "porto", "aeroporto")
+
+    def detected_enemy_ids(self, team: str) -> set[str]:
+        """
+        Inimigos detectados pela força ``team`` neste instante.
+
+        Regras (espelho da névoa de guerra do wargame OAS):
+        - um inimigo é detectado se algum meio amigo vivo o alcança dentro
+          do alcance de detecção da categoria do alvo;
+        - no período noturno os alcances caem 1 hex (mínimo 1);
+        - o Φ de detecção (ciber SEN/C2 do oponente) multiplica os alcances;
+        - infraestruturas fixas (FPSOs, portos, aeródromos) são sempre
+          conhecidas — posição pública.
+        """
+        night = self.period == "night"
+        phi_det = self.phi[team].detection
+        enemies = [u for u in self.alive_units() if u.team != team]
+        own = self.alive_units(team)
+        visible: set[str] = set()
+        for e in enemies:
+            if e.type in self.STATIC_TYPES:
+                visible.add(e.id)
+                continue
+            for f in own:
+                r = f.detection_range.get(e.category, 0) * phi_det
+                if night and r > 0:
+                    r = max(1.0, r - 1.0)
+                if r > 0 and hx.hex_dist(f.col, f.row, e.col, e.row) <= r:
+                    visible.add(e.id)
+                    break
+        return visible
 
     def _event(self, event: str, **payload):
         self.events.append({"event": event, "turn": self.turn,
@@ -448,6 +503,8 @@ class GameState:
             chi=self.chi, adm_matrix=self.adm_matrix,
             advantage=(initiative_team is not None
                        and initiative_team == att.team),
+            phi_offense=self.phi[att.team].offense,
+            phi_defense=self.phi[dfd.team].defense,
         )
         if out.ok:
             att.spend_engagement_fuel()
@@ -530,11 +587,21 @@ class GameState:
             if i < len(second):
                 interleaved.append(second[i])
 
+        detected = {"blue": self.detected_enemy_ids("blue"),
+                    "red": self.detected_enemy_ids("red")} \
+            if self.fog_of_war else None
+
         queue = []
         for i, atk in enumerate(interleaved):
             att = self.unit(atk["attackerId"])
             dfd = self.unit(atk["targetId"])
             if att is None or not att.alive or dfd is None or not dfd.alive:
+                continue
+            # Névoa de guerra: ataque exige alvo detectado no momento da
+            # declaração (infraestrutura fixa é sempre conhecida).
+            if detected is not None and dfd.id not in detected[att.team]:
+                self._log(f"🌫 {att.name}: alvo {dfd.name} não detectado — "
+                          "ataque abortado.")
                 continue
             dist = hx.hex_dist(att.col, att.row, dfd.col, dfd.row)
             wpn = atk.get("weaponType")
@@ -695,14 +762,21 @@ class GameState:
                 if u.category == "air":
                     reload_ok = u.fuel.get("wasAtRefuelLocation") is True
             if reload_ok:
+                # Φ logístico (ciber): recompletamento parcial sob ataque
+                # cibernético à cadeia logística.
+                phi_log = self.phi[u.team].logistics
                 restored = []
                 for wpn, init in u.init_weapons.items():
                     cur = u.weapons.get(wpn, {}).get("quantity", 0)
-                    if cur < init["quantity"]:
-                        u.weapons[wpn] = copy.deepcopy(init)
+                    target_qty = max(1, round(init["quantity"] * phi_log))
+                    if cur < target_qty:
+                        u.weapons[wpn] = {**copy.deepcopy(init),
+                                          "quantity": target_qty}
                         restored.append(wpn.upper())
                 if restored:
-                    self._log(f"🔄 {u.name} recompletou: {', '.join(restored)}")
+                    self._log(f"🔄 {u.name} recompletou: {', '.join(restored)}"
+                              + (f" (Φlog={phi_log:.2f})"
+                                 if phi_log < 1.0 else ""))
 
         # Reabastecimento naval por empilhamento com provedor
         for u in self.units:
@@ -713,7 +787,9 @@ class GameState:
                 and o.row == u.row and o.is_refuel_provider()
                 for o in self.units)
             if has_provider and u.fuel["current"] < u.fuel["max"]:
-                u.fuel["current"] = u.fuel["max"]
+                phi_log = self.phi[u.team].logistics
+                u.fuel["current"] = max(u.fuel["current"],
+                                        round(u.fuel["max"] * phi_log))
                 self._log(f"⛽ {u.name} reabasteceu.")
 
         # Aeronaves em base → prontas com FP cheio
@@ -755,6 +831,8 @@ def play_game(*,
               stochastic: bool = True,
               chi: float = sv.DEFAULT_CHI,
               seed: Optional[int] = None,
+              blue_cyber=None, red_cyber=None,
+              fog_of_war: bool = False,
               on_turn: Optional[Callable[["GameState"], None]] = None) -> GameState:
     """
     Executa uma partida construtiva completa entre dois bots.
@@ -763,7 +841,8 @@ def play_game(*,
     ``battle_round_decision(state, engagement, team)``.
     """
     state = GameState(oob=oob, max_turns=max_turns, stochastic=stochastic,
-                      chi=chi, seed=seed)
+                      chi=chi, seed=seed, blue_cyber=blue_cyber,
+                      red_cyber=red_cyber, fog_of_war=fog_of_war)
 
     def decision(st, eng, team):
         bot = blue_bot if team == "blue" else red_bot

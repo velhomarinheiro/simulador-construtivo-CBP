@@ -7,7 +7,6 @@ import plotly.express as px
 import streamlit as st
 
 from app_utils import BOT_OPTIONS, get_oob, make_bot, page_setup
-from cbp_sim.bots import BotTuning
 from cbp_sim.montecarlo import run_batch, summarize
 from cbp_sim.reporting import batch_report_md
 
@@ -24,6 +23,19 @@ with st.sidebar:
                     key="mc_chi")
     max_turns = st.slider("Limite operacional (dias)", 4, 24, 12, key="mc_mt")
     base_seed = st.number_input("Semente base", 0, 999_999, 0, key="mc_seed")
+    fog = st.toggle("Névoa de guerra (detecção limitada)", value=False,
+                    key="mc_fog")
+    with st.expander("⚡ Guerra cibernética"):
+        c1, c2 = st.columns(2)
+        blue_cyber, red_cyber = {}, {}
+        with c1:
+            st.markdown("**🔵 Azul**")
+            for s in ("C2", "SEN", "WPN", "LOG"):
+                blue_cyber[s] = st.slider(s, 0, 5, 0, key=f"mc_bc_{s}")
+        with c2:
+            st.markdown("**🔴 Verm.**")
+            for s in ("C2", "SEN", "WPN", "LOG"):
+                red_cyber[s] = st.slider(s, 0, 5, 0, key=f"mc_rc_{s}")
     collect = st.toggle("Guardar trilhas p/ treino de ML", value=True,
                         help="Armazena os eventos das partidas para treinar "
                              "o bot de clonagem comportamental na página Bots.")
@@ -37,17 +49,20 @@ if run:
         prog.progress(done / total, text=f"Replicação {done}/{total}")
 
     df, trails = run_batch(
-        blue_bot_factory=lambda: make_bot(blue_kind, BotTuning()),
-        red_bot_factory=lambda: make_bot(red_kind, BotTuning()),
+        blue_bot_factory=lambda: make_bot(blue_kind),
+        red_bot_factory=lambda: make_bot(red_kind),
         n_runs=int(n_runs), oob=copy.deepcopy(get_oob()),
         max_turns=int(max_turns), stochastic=stochastic, chi=chi,
-        base_seed=int(base_seed), collect_events=collect, progress=cb)
+        base_seed=int(base_seed), blue_cyber=blue_cyber,
+        red_cyber=red_cyber, fog_of_war=fog,
+        collect_events=collect, progress=cb)
     prog.empty()
     st.session_state["mc_df"] = df
     st.session_state["mc_config"] = {
         "replicações": int(n_runs), "bot Azul": blue_kind,
         "bot Vermelho": red_kind, "estocástico": stochastic, "χ": chi,
-        "limite (dias)": int(max_turns), "semente base": int(base_seed)}
+        "limite (dias)": int(max_turns), "semente base": int(base_seed),
+        "névoa": fog, "ciber Azul": blue_cyber, "ciber Vermelha": red_cyber}
     if collect:
         st.session_state["event_trails"] = trails
 

@@ -66,12 +66,14 @@ def batch_report_md(summary: dict, df: pd.DataFrame, *,
 
 def comparison_report_md(results: list[dict], *,
                          title: str = "Análise de Alternativas — "
-                                      "Planejamento Baseado em Capacidades") -> str:
+                                      "Planejamento Baseado em Capacidades",
+                         threat: str | None = None) -> str:
     """
     Relatório comparativo de pacotes de força.
 
     ``results``: lista de dicts com chaves ``package`` (nome), ``cost``,
     ``summary`` (de montecarlo.summarize) e opcionalmente ``description``.
+    ``threat``: nome do pacote de ameaça contra o qual se avaliou.
     """
     lines = [
         f"# {title}",
@@ -79,6 +81,10 @@ def comparison_report_md(results: list[dict], *,
         f"*Gerado em {datetime.now():%d/%m/%Y %H:%M} — Simulador Construtivo "
         "CBP · Cenário Operação Atlântico Sul*",
         "",
+    ]
+    if threat:
+        lines += [f"**Cenário de ameaça**: {threat}", ""]
+    lines += [
         "## Alternativas avaliadas",
         "",
     ]
