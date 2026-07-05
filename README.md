@@ -39,11 +39,13 @@ python -m pytest tests/ -q
 
 | Caminho | Conteúdo |
 |---|---|
-| `app.py` + `pages/` | Interface Streamlit (Cenário, Simulação, Monte Carlo, Análise CBP, Bots, Relatórios) |
+| `app.py` | Roteador de navegação (`st.navigation`) — rótulos das páginas |
+| `home.py` + `pages/` | Interface Streamlit (Página Inicial, Cenário, Simulação, Monte Carlo, Análise CBP, Bots, Relatórios) |
 | `cbp_sim/engine.py` | Motor do jogo (estado, turnos, combate, objetivos, vitória, detecção) |
 | `cbp_sim/salvo.py` | Equação de salva multidomínio e matriz de admissibilidade |
 | `cbp_sim/cyber.py` | Domínio cibernético — modulador Φ por canal |
 | `cbp_sim/hexmap.py` | Grade hexagonal odd-q e terrenos do teatro |
+| `cbp_sim/oob_io.py` | Serialização da ordem de batalha em CSV (round-trip com JSON) |
 | `cbp_sim/bots/` | Bot heurístico, bot ML (clonagem comportamental) e treinador RL (REINFORCE) |
 | `cbp_sim/montecarlo.py` | Lotes de replicações e MOEs |
 | `cbp_sim/cbp.py` | Pacotes de força, custos ilustrativos e perfis de capacidade |
@@ -53,7 +55,9 @@ python -m pytest tests/ -q
 
 ## Fluxo de análise
 
-1. **Cenário** — explore/edite a ordem de batalha (upload/download JSON).
+1. **Cenário** — explore/edite a ordem de batalha, com upload/download em
+   **JSON ou CSV** (o CSV traz uma linha por grupo-tarefa, editável em
+   Excel/LibreOffice).
 2. **Simulação** — uma partida bot × bot, turno a turno, com a decomposição
    T_atq/T_def de cada salva.
 3. **Monte Carlo** — replicações com sementes controladas; distribuição das

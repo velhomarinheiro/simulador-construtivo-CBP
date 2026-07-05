@@ -7,6 +7,7 @@ import streamlit as st
 
 from app_utils import get_oob, page_setup
 from cbp_sim.montecarlo import summarize
+from cbp_sim.oob_io import oob_to_csv
 from cbp_sim.reporting import batch_report_md, comparison_report_md
 
 page_setup("Relatórios e Dados")
@@ -89,10 +90,15 @@ with tab_data:
                                detail.to_csv(index=False).encode("utf-8"),
                                "analise_cbp_replicacoes.csv", "text/csv",
                                use_container_width=True)
-        st.download_button(
-            "⬇️ Ordem de batalha ativa (JSON)",
+        oob_c1, oob_c2 = st.columns(2)
+        oob_c1.download_button(
+            "⬇️ OOB ativa (JSON)",
             json.dumps(get_oob(), ensure_ascii=False, indent=2),
             "ordem_de_batalha.json", "application/json",
+            use_container_width=True)
+        oob_c2.download_button(
+            "⬇️ OOB ativa (CSV)", oob_to_csv(get_oob()),
+            "ordem_de_batalha.csv", "text/csv",
             use_container_width=True)
     with c2:
         st.markdown("#### Trilhas de partidas (dataset de ML)")

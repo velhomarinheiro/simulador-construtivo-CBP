@@ -8,6 +8,7 @@ import streamlit as st
 
 from app_utils import page_setup, get_oob, map_figure
 from cbp_sim.engine import load_order_of_battle, OBJECTIVE_IDS
+from cbp_sim.oob_io import oob_to_csv, csv_to_oob
 
 page_setup("Cenário")
 st.title("🗺️ Cenário — Operação Atlântico Sul")
@@ -105,25 +106,38 @@ with tab_io:
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("#### ⬇️ Exportar ordem de batalha")
-        st.download_button(
-            "Baixar OOB ativa (JSON)",
-            json.dumps(oob, ensure_ascii=False, indent=2),
+        e1, e2 = st.columns(2)
+        e1.download_button(
+            "JSON", json.dumps(oob, ensure_ascii=False, indent=2),
             file_name="ordem_de_batalha.json", mime="application/json",
             use_container_width=True)
+        e2.download_button(
+            "CSV (planilha)", oob_to_csv(oob),
+            file_name="ordem_de_batalha.csv", mime="text/csv",
+            use_container_width=True)
+        st.caption("O CSV traz uma linha por grupo-tarefa — editável em "
+                   "Excel/LibreOffice. Campos aninhados (armas, "
+                   "capacidades, alcances) usam a convenção "
+                   "`tipo:qtd[:alcance]` separada por `;`.")
         if st.button("Restaurar OOB padrão", use_container_width=True):
             st.session_state["oob"] = load_order_of_battle()
             st.success("Ordem de batalha padrão restaurada.")
             st.rerun()
     with c2:
         st.markdown("#### ⬆️ Importar ordem de batalha")
-        up = st.file_uploader("Arquivo JSON no formato do wargame OAS "
-                              "(chave `forces.blue` / `forces.red`)",
-                              type=["json"])
+        up = st.file_uploader(
+            "Arquivo JSON (formato do wargame OAS, chave "
+            "`forces.blue`/`forces.red`) ou CSV (uma linha por grupo).",
+            type=["json", "csv"])
         if up is not None:
             try:
-                data = json.load(up)
-                assert "forces" in data and "blue" in data["forces"] \
-                    and "red" in data["forces"]
+                if up.name.lower().endswith(".csv"):
+                    data = csv_to_oob(up.getvalue())
+                else:
+                    data = json.load(up)
+                    assert "forces" in data and "blue" in data["forces"] \
+                        and "red" in data["forces"], \
+                        "JSON sem a estrutura forces.blue / forces.red"
                 st.session_state["oob"] = data
                 st.success(f"OOB carregada: "
                            f"{len(data['forces']['blue'])} grupos azuis, "

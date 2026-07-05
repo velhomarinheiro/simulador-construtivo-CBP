@@ -395,3 +395,58 @@ def test_rlbot_records_trajectory():
     phase_id, action, mask = bot.move_decisions[0]
     assert mask[action], "ação amostrada fora da máscara legal"
     assert bot.phase_features[phase_id].shape == (9, 10, 16)
+
+
+# ── Serialização OOB ↔ CSV ───────────────────────────────────────────────────
+
+def test_oob_csv_roundtrip_preserves_fields():
+    from cbp_sim.oob_io import csv_to_oob, oob_to_csv
+    oob = load_order_of_battle()
+    oob2 = csv_to_oob(oob_to_csv(oob))
+
+    def nz(d):  # normaliza: entradas zero equivalem a ausência (idem no motor)
+        return {k: v for k, v in (d or {}).items() if v}
+
+    for team in ("blue", "red"):
+        a = {s["id"]: s for s in oob["forces"][team]}
+        b = {s["id"]: s for s in oob2["forces"][team]}
+        assert set(a) == set(b)
+        for uid in a:
+            sa, sb = a[uid], b[uid]
+            assert sa["stayingPower"] == sb["stayingPower"]
+            assert sa.get("movement", 0) == sb.get("movement", 0)
+            assert sa["category"] == sb["category"]
+            assert sa.get("weapons", {}) == sb.get("weapons", {})
+            assert sa.get("capabilities", {}) == sb.get("capabilities", {})
+            assert nz(sa.get("detectionRange")) == nz(sb.get("detectionRange"))
+            assert nz(sa.get("attackRange")) == nz(sb.get("attackRange"))
+            assert (sa.get("composition") or []) == (sb.get("composition") or [])
+
+
+def test_oob_from_csv_is_playable():
+    from cbp_sim.oob_io import csv_to_oob, oob_to_csv
+    oob = csv_to_oob(oob_to_csv(load_order_of_battle()))
+    st = play_game(blue_bot=HeuristicBot(), red_bot=HeuristicBot(),
+                   oob=oob, seed=1)
+    assert st.winner in ("blue", "red")
+
+
+def test_minimal_csv_produces_valid_oob():
+    from cbp_sim.oob_io import csv_to_oob
+    csv = (
+        "id,team,category,stayingPower,movement,col,row,weapons\n"
+        "BLUE-X,blue,surface,4,3,3,4,mss:8:3\n"
+        "RED-Y,red,surface,3,4,12,5,ascm:6:6\n"
+    )
+    oob = csv_to_oob(csv)
+    assert len(oob["forces"]["blue"]) == 1
+    assert len(oob["forces"]["red"]) == 1
+    bx = oob["forces"]["blue"][0]
+    assert bx["weapons"]["mss"] == {"quantity": 8, "range": 3}
+    assert bx["position"] == {"col": 3, "row": 4}
+
+
+def test_csv_rejects_single_sided_force():
+    from cbp_sim.oob_io import csv_to_oob
+    with pytest.raises(ValueError):
+        csv_to_oob("id,team,category,stayingPower\nBLUE-X,blue,surface,4\n")

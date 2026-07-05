@@ -29,12 +29,19 @@ PAGE_ICON = "⚓"
 
 
 def page_setup(title: str, *, wide: bool = True):
-    st.set_page_config(
-        page_title=f"{title} · Simulador Construtivo CBP",
-        page_icon=PAGE_ICON,
-        layout="wide" if wide else "centered",
-        initial_sidebar_state="expanded",
-    )
+    # Com st.navigation (roteador em app.py), o set_page_config global já
+    # foi chamado no arquivo de entrada; repetí-lo aqui lançaria exceção.
+    # Toleramos isso para que cada página funcione tanto sob o roteador
+    # quanto isoladamente (ex.: testes com AppTest.from_file).
+    try:
+        st.set_page_config(
+            page_title=f"{title} · Simulador Construtivo CBP",
+            page_icon=PAGE_ICON,
+            layout="wide" if wide else "centered",
+            initial_sidebar_state="expanded",
+        )
+    except Exception:  # noqa: BLE001 — StreamlitAPIException (já configurado)
+        pass
     inject_css()
 
 
