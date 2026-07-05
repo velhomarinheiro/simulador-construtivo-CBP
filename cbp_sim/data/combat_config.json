@@ -1,0 +1,468 @@
+{
+  "weaponProfiles": {
+    "ascm": {
+      "expendable": true,
+      "defaultRange": 6,
+      "targets": [
+        "surface"
+      ],
+      "interceptableBy": [
+        "airDefense"
+      ],
+      "damageProfile": "ascmSurface",
+      "label": "ASCM"
+    },
+    "mss": {
+      "expendable": true,
+      "defaultRange": 3,
+      "targets": [
+        "surface"
+      ],
+      "interceptableBy": [
+        "airDefense"
+      ],
+      "damageProfile": "mssSurface",
+      "label": "MSS"
+    },
+    "torpedo": {
+      "expendable": true,
+      "defaultRange": 2,
+      "targets": [
+        "surface",
+        "submarine"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "torpedo",
+      "label": "TORPEDO"
+    },
+    "lacm": {
+      "expendable": true,
+      "defaultRange": 10,
+      "targets": [
+        "land"
+      ],
+      "interceptableBy": [
+        "airDefense",
+        "bmd"
+      ],
+      "damageProfile": "lacm",
+      "label": "LACM"
+    },
+    "asbm": {
+      "expendable": true,
+      "defaultRange": 10,
+      "targets": [
+        "surface"
+      ],
+      "interceptableBy": [
+        "bmd"
+      ],
+      "damageProfile": "asbmSurface",
+      "label": "ASBM"
+    },
+    "navalGun": {
+      "expendable": false,
+      "defaultRange": 1,
+      "targets": [
+        "surface",
+        "land"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "navalGun",
+      "label": "CANHÃO"
+    },
+    "airDefense": {
+      "expendable": false,
+      "defaultRange": 1,
+      "targets": [
+        "air"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "airDefense",
+      "label": "DEFA"
+    },
+    "bmd": {
+      "expendable": false,
+      "defaultRange": 1,
+      "targets": [
+        "air"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "bmd",
+      "label": "BMD"
+    },
+    "asw": {
+      "expendable": false,
+      "defaultRange": 2,
+      "targets": [
+        "submarine"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "asw",
+      "label": "ASW"
+    },
+    "airAttack": {
+      "expendable": false,
+      "defaultRange": 4,
+      "targets": [
+        "surface",
+        "air",
+        "land"
+      ],
+      "interceptableBy": [
+        "airDefense"
+      ],
+      "damageProfile": "airAttack",
+      "label": "AT.AÉR"
+    },
+    "raid": {
+      "expendable": false,
+      "defaultRange": 2,
+      "targets": [
+        "land",
+        "surface"
+      ],
+      "interceptableBy": [],
+      "damageProfile": "raid",
+      "label": "OP.ESP."
+    }
+  },
+  "damageTables": {
+    "blue": {
+      "ascmSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": "1d6",
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "mssSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "torpedo": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "submarine": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "lacm": {
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "asbmSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": "1d6",
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "navalGun": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": 1,
+          "6": 1
+        },
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "airDefense": {
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        },
+        "missile": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "bmd": {
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        },
+        "missile": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "asw": {
+        "submarine": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "airAttack": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        },
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "raid": {
+        "land": {
+          "1": 0,
+          "2": 1,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      }
+    },
+    "red": {
+      "ascmSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": "1d6",
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "mssSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "torpedo": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "submarine": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "lacm": {
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "asbmSurface": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": "1d6",
+          "5": "1d6",
+          "6": "1d6"
+        }
+      },
+      "navalGun": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": 1,
+          "6": 1
+        },
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "airDefense": {
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        },
+        "missile": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "bmd": {
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        },
+        "missile": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 1,
+          "6": 1
+        }
+      },
+      "asw": {
+        "submarine": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "airAttack": {
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "air": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        },
+        "land": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 1,
+          "6": "1d6"
+        }
+      },
+      "raid": {
+        "land": {
+          "1": 0,
+          "2": 1,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        },
+        "surface": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 1,
+          "5": "1d6",
+          "6": "1d6"
+        }
+      }
+    }
+  }
+}
