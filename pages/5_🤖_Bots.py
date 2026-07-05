@@ -8,14 +8,15 @@ import streamlit as st
 
 from app_utils import get_oob, page_setup
 from cbp_sim.bots import (BotTuning, HeuristicBot, MLBot, MLPolicy,
-                          build_training_samples)
+                          RLTrainer, RewardWeights, build_training_samples)
 from cbp_sim.montecarlo import run_batch, summarize
 
 page_setup("Bots")
 st.title("🤖 Bots — doutrina heurística e aprendizado de máquina")
 
-tab_h, tab_ml, tab_eval = st.tabs(
-    ["⚙️ Bot heurístico", "🧠 Treinar bot ML", "⚔️ Avaliação ML × Heurístico"])
+tab_h, tab_ml, tab_rl, tab_eval = st.tabs(
+    ["⚙️ Bot heurístico", "🧠 Clonagem comportamental",
+     "🎓 Aprendizado por reforço", "⚔️ Avaliação ML × Heurístico"])
 
 # ── Heurístico ────────────────────────────────────────────────────────────────
 with tab_h:
@@ -164,6 +165,105 @@ with tab_ml:
                 st.success("Modelos carregados — bot ML habilitado.")
             except Exception as e:  # noqa: BLE001
                 st.error(f"Arquivo inválido: {e}")
+
+# ── Aprendizado por reforço ───────────────────────────────────────────────────
+with tab_rl:
+    st.markdown("""
+    Refina o bot por **REINFORCE em auto-jogo**: o agente joga partidas
+    construtivas completas contra o bot heurístico, amostrando ações da
+    softmax mascarada sobre os hexes legais, e recebe ao fim de cada
+    episódio uma **recompensa orientada à missão** (vitória + proteção/
+    destruição da infraestrutura − perdas próprias). As redes são
+    atualizadas por gradiente de política com baseline de lote e bônus de
+    entropia.
+
+    Pipeline recomendado (como no AlphaGo): **1)** pré-treine por clonagem
+    comportamental na aba anterior (*warm start*); **2)** refine aqui por
+    reforço — assim o agente parte de uma política competente e o RL
+    otimiza as MOEs, não apenas a imitação.
+    """)
+    has_bc = st.session_state.get("ml_policies") is not None
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        rl_team = st.radio("Lado do agente RL", ["blue", "red"],
+                           format_func=lambda t: "🔵 Força Azul"
+                           if t == "blue" else "🔴 Força Vermelha",
+                           horizontal=True)
+        warm = st.toggle("Warm start (redes da clonagem)", value=has_bc,
+                         disabled=not has_bc,
+                         help="Parte das redes treinadas por clonagem "
+                              "comportamental. Sem warm start, o RL parte "
+                              "de redes aleatórias (aprendizado lento).")
+        rl_hidden = st.select_slider("Neurônios (se sem warm start)",
+                                     [64, 128, 256], 128)
+    with c2:
+        iterations = st.slider("Iterações", 2, 100, 15)
+        episodes = st.slider("Episódios por iteração", 4, 40, 12, 2)
+        rl_fog = st.toggle("Treinar com névoa de guerra", value=False,
+                           key="rl_fog")
+    with c3:
+        temperature = st.slider("Temperatura de exploração", 0.2, 2.0,
+                                0.8, 0.1)
+        entropy = st.slider("Bônus de entropia", 0.0, 0.05, 0.01, 0.005)
+        st.caption("**Pesos da recompensa**")
+        w_win = st.slider("Vitória", 0.0, 2.0, 1.0, 0.1, key="rl_w_win")
+        w_mis = st.slider("Missão (infraestrutura)", 0.0, 2.0, 1.0, 0.1,
+                          key="rl_w_mis")
+        w_los = st.slider("Perdas próprias", 0.0, 2.0, 0.5, 0.1,
+                          key="rl_w_los")
+
+    if st.button("🎓 Treinar por reforço", type="primary"):
+        if warm and has_bc:
+            base = st.session_state["ml_policies"]
+            mv_pol = MLPolicy.from_bytes(base["move"].to_bytes())
+            atk_pol = MLPolicy.from_bytes(base["attack"].to_bytes())
+        else:
+            mv_pol = MLPolicy(hidden=int(rl_hidden), seed=1)
+            atk_pol = MLPolicy(hidden=int(rl_hidden), seed=2)
+        trainer = RLTrainer(
+            move_policy=mv_pol, attack_policy=atk_pol, team=rl_team,
+            opponent_factory=lambda: HeuristicBot(
+                st.session_state.get("bot_tuning")),
+            reward_weights=RewardWeights(win=w_win, mission=w_mis,
+                                         losses=w_los),
+            temperature=temperature, entropy_coef=entropy,
+            fog_of_war=rl_fog, oob=copy.deepcopy(get_oob()))
+        prog = st.progress(0.0, text="Treinando por reforço...")
+
+        def cb(it, total, hist):
+            prog.progress(it / total,
+                          text=f"Iteração {it}/{total} · vitórias "
+                               f"{hist['win_rate'][-1]:.0%} · recompensa "
+                               f"{hist['mean_reward'][-1]:+.2f}")
+
+        hist = trainer.train(iterations=int(iterations),
+                             episodes_per_iter=int(episodes), progress=cb)
+        prog.empty()
+        st.session_state["ml_policies"] = {"move": mv_pol, "attack": atk_pol}
+        st.session_state["rl_history"] = {"team": rl_team, **hist}
+        st.success(f"Treino RL concluído — taxa de vitória final "
+                   f"{hist['win_rate'][-1]:.0%} (média das últimas 3 "
+                   f"iterações: {sum(hist['win_rate'][-3:]) / 3:.0%}). "
+                   "As redes refinadas passam a ser o bot **ML** nas "
+                   "demais páginas.")
+
+    rl_hist = st.session_state.get("rl_history")
+    if rl_hist:
+        dfh = pd.DataFrame({"iteração": rl_hist["iteration"],
+                            "taxa de vitória": rl_hist["win_rate"],
+                            "recompensa média": rl_hist["mean_reward"]})
+        c1, c2 = st.columns(2)
+        with c1:
+            fig = px.line(dfh, x="iteração", y="taxa de vitória",
+                          title=f"Curva de aprendizado — lado "
+                                f"{'Azul' if rl_hist.get('team') == 'blue' else 'Vermelho'}",
+                          markers=True, range_y=[0, 1])
+            st.plotly_chart(fig, use_container_width=True)
+        with c2:
+            fig = px.line(dfh, x="iteração", y="recompensa média",
+                          title="Recompensa média por iteração",
+                          markers=True)
+            st.plotly_chart(fig, use_container_width=True)
 
 # ── Avaliação ─────────────────────────────────────────────────────────────────
 with tab_eval:

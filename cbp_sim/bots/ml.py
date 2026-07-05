@@ -213,6 +213,54 @@ class MLPolicy:
         hist["best_val_acc"] = best_acc
         return hist
 
+    def reinforce_update(self, X: np.ndarray, actions: np.ndarray,
+                         masks: np.ndarray, advantages: np.ndarray, *,
+                         entropy_coef: float = 0.01,
+                         batch_size: int = 256) -> dict:
+        """
+        Passo de gradiente de política (REINFORCE) com softmax mascarado.
+
+        Minimiza −A·log π(a|s) − β·H(π), onde π é a softmax dos logits
+        restrita às ações legais (``masks``), A é a vantagem do episódio e
+        H a entropia (bônus de exploração). Usado pelo treinador de
+        aprendizado por reforço (``bots.rl``).
+        """
+        X = X.reshape(X.shape[0], -1).astype(np.float32)
+        n = len(actions)
+        total_loss, total_entropy = 0.0, 0.0
+        for start in range(0, n, batch_size):
+            sl = slice(start, min(start + batch_size, n))
+            xb, ab, mb, advb = X[sl], actions[sl], masks[sl], advantages[sl]
+            nb = len(ab)
+            # forward
+            h_pre = xb @ self.W1 + self.b1
+            h = np.maximum(0.0, h_pre)
+            z = h @ self.W2 + self.b2
+            z = np.where(mb, z, -1e9)
+            z -= z.max(axis=1, keepdims=True)
+            exp = np.exp(z)
+            p = exp / exp.sum(axis=1, keepdims=True)
+            logp = np.log(p + 1e-9)
+            idx = np.arange(nb)
+            H = -(p * logp * mb).sum(axis=1)
+            total_loss += float(-(advb * logp[idx, ab]).sum())
+            total_entropy += float(H.sum())
+            # backward: dL/dz = −A·(onehot − p) − β·dH/dz
+            dz = p * advb[:, None]
+            dz[idx, ab] -= advb
+            if entropy_coef > 0.0:
+                dz += entropy_coef * p * (logp + H[:, None])
+            dz = np.where(mb, dz, 0.0) / n
+            gW2 = h.T @ dz
+            gb2 = dz.sum(axis=0)
+            dh = dz @ self.W2.T
+            dh[h_pre <= 0] = 0.0
+            gW1 = xb.T @ dh
+            gb1 = dh.sum(axis=0)
+            self._adam_step({"W1": gW1, "b1": gb1, "W2": gW2, "b2": gb2})
+        return {"loss": total_loss / max(1, n),
+                "entropy": total_entropy / max(1, n)}
+
     # ── Persistência ─────────────────────────────────────────────────────────
     def to_bytes(self) -> bytes:
         buf = io.BytesIO()

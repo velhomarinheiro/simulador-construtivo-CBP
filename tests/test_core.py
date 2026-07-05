@@ -325,3 +325,73 @@ def test_escort_improves_fpso_survival():
         red_bot_factory=HeuristicBot, n_runs=15)
     assert (df2["fpsos_surviving"].mean()
             >= df0["fpsos_surviving"].mean())
+
+
+# ── Aprendizado por reforço ──────────────────────────────────────────────────
+
+def test_episode_reward_mission_orientation():
+    from cbp_sim.bots import RewardWeights, episode_reward
+    m_good_blue = {"winner": "blue", "fpsos_surviving": 4,
+                   "port_integrity_pct": 100.0, "blue_losses_pct": 0.0,
+                   "red_losses_pct": 80.0}
+    m_bad_blue = {"winner": "red", "fpsos_surviving": 0,
+                  "port_integrity_pct": 20.0, "blue_losses_pct": 60.0,
+                  "red_losses_pct": 10.0}
+    w = RewardWeights()
+    assert episode_reward(m_good_blue, "blue", w) > episode_reward(
+        m_bad_blue, "blue", w)
+    # espelho: o mesmo desfecho ruim p/ Azul é bom p/ Vermelho
+    assert episode_reward(m_bad_blue, "red", w) > episode_reward(
+        m_good_blue, "red", w)
+
+
+def test_reinforce_update_raises_action_probability():
+    rng = np.random.default_rng(0)
+    pol = MLPolicy(hidden=32, seed=5)
+    X = rng.normal(size=(4, 9, 10, 16)).astype(np.float32)
+    actions = np.array([3, 17, 42, 99])
+    masks = np.zeros((4, 160), dtype=bool)
+    masks[:, :120] = True                       # ações legais
+    adv = np.ones(4, dtype=np.float32)          # vantagem positiva
+
+    def probs():
+        z = pol.logits(X)
+        z = np.where(masks, z, -1e9)
+        z -= z.max(axis=1, keepdims=True)
+        e = np.exp(z)
+        p = e / e.sum(axis=1, keepdims=True)
+        return p[np.arange(4), actions]
+
+    before = probs()
+    for _ in range(20):
+        pol.reinforce_update(X, actions, masks, adv, entropy_coef=0.0)
+    after = probs()
+    assert (after > before).all()
+
+
+def test_rl_trainer_end_to_end():
+    from cbp_sim.bots import RLTrainer
+    mv = MLPolicy(hidden=32, seed=1)
+    atk = MLPolicy(hidden=32, seed=2)
+    w1 = mv.W1.copy()
+    tr = RLTrainer(move_policy=mv, attack_policy=atk, team="blue", seed=3)
+    hist = tr.train(iterations=2, episodes_per_iter=3)
+    assert len(hist["win_rate"]) == 2
+    assert not np.allclose(w1, mv.W1)           # política atualizada
+    # o par de redes refinadas joga uma partida completa
+    st = play_game(blue_bot=MLBot(mv, atk), red_bot=HeuristicBot(),
+                   seed=42, max_turns=4)
+    assert st.winner in ("blue", "red")
+
+
+def test_rlbot_records_trajectory():
+    from cbp_sim.bots import RLBot
+    import numpy as _np
+    bot = RLBot(MLPolicy(hidden=32, seed=1), MLPolicy(hidden=32, seed=2),
+                rng=_np.random.default_rng(0), temperature=1.0)
+    st = GameState(seed=8)
+    st.apply_moves("blue", bot.moves(st, "blue"))
+    assert bot.move_decisions, "nenhuma decisão de movimento registrada"
+    phase_id, action, mask = bot.move_decisions[0]
+    assert mask[action], "ação amostrada fora da máscara legal"
+    assert bot.phase_features[phase_id].shape == (9, 10, 16)
