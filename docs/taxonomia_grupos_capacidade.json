@@ -1,0 +1,244 @@
+{
+  "$schema_version": "1.0",
+  "meta": {
+    "cenario": "Operação Atlântico Sul — Defesa da Bacia de Campos",
+    "referencia_doutrinaria": "Camada 2 — componentes de força de Coutau-Bégarie (Traité de stratégie navale, item 350)",
+    "fonte": "gerado de cbp_sim.cbp.FORCE_TAXONOMY (simulador-construtivo-CBP); ver docs/ESPEC_grupos_de_capacidade.md",
+    "observacao": "Fonte única da verdade da taxonomia. Reproduza os mesmos IDs de grupo-tarefa para manter comparabilidade entre simuladores."
+  },
+  "dominios": {
+    "NAV_SURF": "⚓ Naval — Superfície",
+    "NAV_SUB": "🌊 Naval — Submarino",
+    "AIR": "✈️ Aéreo",
+    "LAND": "🏔️ Terrestre",
+    "CYBER": "⚡ Cibernético",
+    "INFRA": "🏭 Infraestrutura crítica"
+  },
+  "cyber_subtypes": [
+    "C2",
+    "SEN",
+    "WPN",
+    "LOG"
+  ],
+  "infra": {
+    "sigla": "INFRA",
+    "label": "Infraestrutura crítica (ativos protegidos)",
+    "nota": "FPSOs, portos e aeródromos: objetivos do cenário, fora do cômputo de força e de custo, mas dentro das MOEs. Regra: toda unidade sem grupo na taxonomia cai em INFRA (fallback)."
+  },
+  "moe_convention": {
+    "per_game_key": "grp_<side>_<SIGLA>",
+    "metric": "perda de poder de permanência (SP) em %: 100*(1 - soma(SP_atual)/soma(SP_inicial)) sobre as unidades do grupo",
+    "nota": "grupos ausentes da força não geram chave"
+  },
+  "decisoes_de_cenario": [
+    "SAG-P (BLUE-SAG-P) e ESCCSG (RED-GE-1) computados em INTERV (intervenção)."
+  ],
+  "taxonomia": {
+    "blue": [
+      {
+        "domain": "⚓ Naval — Superfície",
+        "groups": [
+          {
+            "sigla": "INTERV",
+            "label": "Intervenção (grupo aeronaval)",
+            "units": [
+              "BLUE-SAG-P"
+            ]
+          },
+          {
+            "sigla": "VIG",
+            "label": "Vigilância (escolta oceânica)",
+            "units": [
+              "BLUE-SAG-S1",
+              "BLUE-SAG-S2"
+            ]
+          },
+          {
+            "sigla": "ANF",
+            "label": "Anfíbia",
+            "units": [
+              "BLUE-ANFIB"
+            ]
+          },
+          {
+            "sigla": "COST",
+            "label": "Costeira (patrulha)",
+            "units": [
+              "BLUE-PAT-O1",
+              "BLUE-PAT-O2",
+              "BLUE-PAT-C1",
+              "BLUE-PAT-C2"
+            ]
+          },
+          {
+            "sigla": "LOG",
+            "label": "Logística (trem de esquadra)",
+            "units": [
+              "BLUE-LOG-A",
+              "BLUE-LOG-T"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "🌊 Naval — Submarino",
+        "groups": [
+          {
+            "sigla": "DISS",
+            "label": "Dissuasão (negação do mar)",
+            "units": [
+              "BLUE-SUB-N",
+              "BLUE-SUB-1",
+              "BLUE-SUB-2",
+              "BLUE-SUB-3"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "✈️ Aéreo",
+        "groups": [
+          {
+            "sigla": "DAE",
+            "label": "Defesa aérea / superioridade",
+            "units": [
+              "BLUE-CACA-1",
+              "BLUE-CACA-2"
+            ]
+          },
+          {
+            "sigla": "PATMAR",
+            "label": "Patrulha marítima e ISR",
+            "units": [
+              "BLUE-MPRA-1",
+              "BLUE-MPRA-2"
+            ]
+          },
+          {
+            "sigla": "ATQ",
+            "label": "Ataque aeronaval",
+            "units": [
+              "BLUE-CJAT-1",
+              "BLUE-CJAT-2"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "🏔️ Terrestre",
+        "groups": [
+          {
+            "sigla": "DCOST",
+            "label": "Defesa costeira (A2/AD)",
+            "units": [
+              "BLUE-DCOST1",
+              "BLUE-DCOST2"
+            ]
+          },
+          {
+            "sigla": "GBAD",
+            "label": "Defesa antiaérea",
+            "units": [
+              "BLUE-ADA-1",
+              "BLUE-ADA-2"
+            ]
+          },
+          {
+            "sigla": "OPESP",
+            "label": "Operações especiais",
+            "units": [
+              "BLUE-SEOP"
+            ]
+          }
+        ]
+      }
+    ],
+    "red": [
+      {
+        "domain": "⚓ Naval — Superfície",
+        "groups": [
+          {
+            "sigla": "INTERV",
+            "label": "Intervenção (grupo de batalha)",
+            "units": [
+              "RED-GBPA",
+              "RED-GE-1"
+            ]
+          },
+          {
+            "sigla": "VIG",
+            "label": "Vigilância (escoltas)",
+            "units": [
+              "RED-GE-2",
+              "RED-GE-3"
+            ]
+          },
+          {
+            "sigla": "ANF",
+            "label": "Anfíbia",
+            "units": [
+              "RED-GANF"
+            ]
+          },
+          {
+            "sigla": "LOG",
+            "label": "Logística",
+            "units": [
+              "RED-AOR-G",
+              "RED-GLOG",
+              "RED-AKE"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "🌊 Naval — Submarino",
+        "groups": [
+          {
+            "sigla": "DISS",
+            "label": "Dissuasão (negação do mar)",
+            "units": [
+              "RED-KSN",
+              "RED-KS-1"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "✈️ Aéreo",
+        "groups": [
+          {
+            "sigla": "DAE",
+            "label": "Caça embarcada",
+            "units": [
+              "RED-KMF-1",
+              "RED-KMF-2"
+            ]
+          },
+          {
+            "sigla": "PATMAR",
+            "label": "Patrulha marítima e AEW",
+            "units": [
+              "RED-MPRA-K1",
+              "RED-MPRA-K2",
+              "RED-AWACS-K"
+            ]
+          }
+        ]
+      },
+      {
+        "domain": "🏔️ Terrestre",
+        "groups": [
+          {
+            "sigla": "OPESP",
+            "label": "Operações especiais",
+            "units": [
+              "RED-SEOP",
+              "RED-SEOP-2"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

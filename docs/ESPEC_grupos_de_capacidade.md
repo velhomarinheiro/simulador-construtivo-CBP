@@ -131,6 +131,12 @@ entre parênteses são apenas mnemônicos.
 
 ## 5. Estrutura de dados de referência
 
+> **Arquivo pronto para carregar:** [`taxonomia_grupos_capacidade.json`](taxonomia_grupos_capacidade.json)
+> — a taxonomia completa (gerada a partir do código, fiel por construção), com
+> metadados de domínios, subtipos ciber, convenção de MOEs e as decisões de
+> cenário. Prefira **importar esse arquivo** no outro simulador a copiar o bloco
+> abaixo, que é apenas ilustrativo.
+
 Uma única constante declarativa é suficiente; tudo o mais deriva dela. Formato
 neutro (JSON/YAML/dict), reproduzível em qualquer linguagem:
 
@@ -291,6 +297,30 @@ marítima (`PATMAR`) absorvem o desgaste.
 - Documento de trabalho do autor: *A evolução das capacidades navais
   brasileiras (1985–2025)* — estrutura de classificação em três camadas.
 
+### Exemplo mínimo de carregamento (Python)
+
+```python
+import json
+
+with open("taxonomia_grupos_capacidade.json", encoding="utf-8") as f:
+    TAX = json.load(f)["taxonomia"]
+
+def classify_unit(unit_id, side="blue"):
+    for dom in TAX[side]:
+        for grp in dom["groups"]:
+            if unit_id in grp["units"]:
+                return dom["domain"], grp["sigla"], grp["label"]
+    return "🏭 Infraestrutura crítica", "INFRA", "Ativo protegido"
+```
+
+Em JS/Node: `const TAX = require("./taxonomia_grupos_capacidade.json").taxonomia;`
+e a mesma varredura. O arquivo é UTF-8; preserve os emojis dos rótulos de
+domínio (ou substitua-os por códigos como `NAV_SURF` se preferir rótulos ASCII).
+
+---
+
 *Consistente com `cbp_sim/cbp.py` (`FORCE_TAXONOMY`, `classify_unit`,
 `taxonomy_order`, `group_labels`) e `cbp_sim/montecarlo.py`
-(`group_loss_metrics`, `summarize_groups`) do `simulador-construtivo-CBP`.*
+(`group_loss_metrics`, `summarize_groups`) do `simulador-construtivo-CBP`.
+O arquivo `taxonomia_grupos_capacidade.json` é gerado a partir de
+`FORCE_TAXONOMY` — regenere-o se a taxonomia mudar.*
