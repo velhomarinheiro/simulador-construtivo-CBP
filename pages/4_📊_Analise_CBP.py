@@ -10,8 +10,9 @@ import streamlit as st
 from app_utils import BOT_OPTIONS, get_oob, make_bot, page_setup
 from cbp_sim.cbp import (CYBER_DOMAIN_LABEL, FORCE_TAXONOMY, PRESET_PACKAGES,
                          THREAT_PACKAGES, UNIT_COSTS, ForcePackage,
-                         apply_package, capability_profile,
-                         package_composition, package_cost, preset_overview)
+                         apply_package, capability_profile, classify_unit,
+                         package_composition, package_cost, preset_overview,
+                         taxonomy_order)
 from cbp_sim.montecarlo import run_batch, summarize
 from cbp_sim.reporting import comparison_report_md
 
@@ -106,12 +107,18 @@ with st.expander("💰 Tabela de custos (calibrável)"):
     cost_table = st.session_state.get("cost_table", dict(UNIT_COSTS))
     base_oob = get_oob()
     names = {s["id"]: s["name"] for s in base_oob["forces"]["blue"]}
-    cost_df = pd.DataFrame(
-        [{"ID": k, "Grupo": names.get(k, k), "Custo (UC)": v}
-         for k, v in cost_table.items()])
+    order = taxonomy_order("blue")
+    cost_rows = []
+    for k, v in sorted(cost_table.items(),
+                       key=lambda kv: order.get(kv[0], 999)):
+        dom, sigla, _label = classify_unit(k)
+        cost_rows.append({"Domínio": dom, "Capac.": sigla, "ID": k,
+                          "Grupo-tarefa": names.get(k, k), "Custo (UC)": v})
+    cost_df = pd.DataFrame(cost_rows)
     edited = st.data_editor(
-        cost_df, hide_index=True, use_container_width=True, height=300,
-        disabled=["ID", "Grupo"], key="cost_editor")
+        cost_df, hide_index=True, use_container_width=True, height=340,
+        disabled=["Domínio", "Capac.", "ID", "Grupo-tarefa"],
+        key="cost_editor")
     c1, c2, c3 = st.columns(3)
     if c1.button("Salvar custos na sessão", use_container_width=True):
         st.session_state["cost_table"] = dict(

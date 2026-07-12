@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 from app_utils import page_setup, get_oob, map_figure
+from cbp_sim.cbp import classify_unit, taxonomy_order
 from cbp_sim.engine import load_order_of_battle, OBJECTIVE_IDS
 from cbp_sim.oob_io import oob_to_csv, csv_to_oob
 
@@ -41,8 +42,11 @@ with tab_oob:
     team_sel = st.radio("Força", ["blue", "red"], horizontal=True,
                         format_func=lambda t: "🔵 Força Azul (MB)"
                         if t == "blue" else "🔴 Força Vermelha")
+    order = taxonomy_order(team_sel)
     rows = []
-    for s in oob["forces"][team_sel]:
+    for s in sorted(oob["forces"][team_sel],
+                    key=lambda s: order.get(s["id"], 999)):
+        dom, sigla, label = classify_unit(s["id"], team_sel)
         wpns = ", ".join(f"{k}×{v.get('quantity', 0)}"
                          for k, v in (s.get("weapons") or {}).items())
         caps = ", ".join(f"{k}:{v}"
@@ -50,6 +54,7 @@ with tab_oob:
         comp = " + ".join(f"{c['quantity']}× {c['type']}"
                           for c in (s.get("composition") or []))
         rows.append({
+            "Domínio": dom, "Grupo de capacidade": f"{sigla} — {label}",
             "ID": s["id"], "Nome": s["name"], "Categoria": s["category"],
             "SP": s["stayingPower"], "Mov": s.get("movement", 0),
             "Composição": comp, "Armas": wpns or "—",
@@ -57,8 +62,14 @@ with tab_oob:
         })
     df = pd.DataFrame(rows)
     st.dataframe(df, use_container_width=True, hide_index=True, height=520)
-    st.caption(f"{len(rows)} grupos-tarefa · SP total "
-               f"{sum(r['SP'] for r in rows)}")
+    st.caption(
+        f"{len(rows)} grupos-tarefa · SP total "
+        f"{sum(r['SP'] for r in rows)} · Grupos de capacidade navais "
+        "conforme os componentes de força de Coutau-Bégarie (Camada 2 da "
+        "estrutura de classificação em três camadas): **DISS** dissuasão · "
+        "**INTERV** intervenção · **VIG** vigilância · **COST** costeira · "
+        "**ANF** anfíbia · **LOG** logística; domínios aéreo e terrestre com "
+        "grupos análogos; infraestrutura crítica fora do cômputo de força.")
 
     with st.expander("✏️ Editar grupo-tarefa"):
         ids = [s["id"] for s in oob["forces"][team_sel]]

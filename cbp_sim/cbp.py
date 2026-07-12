@@ -134,6 +134,36 @@ def unit_group(unit_id: str, side: str = "blue"):
     return None
 
 
+#: Domínio-fantasia para os ativos protegidos (FPSOs, portos, aeródromos):
+#: são objetivos do cenário, não itens de aquisição — ficam fora dos grupos
+#: de capacidade e do cômputo de custo dos pacotes de força.
+INFRA_DOMAIN = "🏭 Infraestrutura crítica"
+
+
+def classify_unit(unit_id: str, side: str = "blue"):
+    """
+    (domínio, sigla, rótulo) de qualquer unidade da OOB: grupos de
+    capacidade da taxonomia ou, para os ativos protegidos, o domínio
+    de infraestrutura crítica.
+    """
+    tax = unit_group(unit_id, side)
+    if tax is not None:
+        return tax
+    return INFRA_DOMAIN, "INFRA", "Ativo protegido (objetivo do cenário)"
+
+
+def taxonomy_order(side: str = "blue") -> dict:
+    """unit_id → índice de ordenação (domínio → grupo → posição na lista)."""
+    order: dict[str, int] = {}
+    i = 0
+    for dom in FORCE_TAXONOMY.get(side, []):
+        for grp in dom["groups"]:
+            for uid in grp["units"]:
+                order[uid] = i
+                i += 1
+    return order
+
+
 def _effect_label(factor: float) -> str:
     if factor <= 0:
         return "✖ removido"

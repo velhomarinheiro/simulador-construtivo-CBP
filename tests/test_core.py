@@ -502,3 +502,17 @@ def test_preset_overview_has_all_packages_and_cost_row():
     for p in PRESET_PACKAGES:
         assert p.name in ov.columns
     assert (ov["Grupo de capacidade"] == "Custo total (UC)").any()
+
+
+def test_classify_unit_infra_fallback_and_order():
+    from cbp_sim.cbp import classify_unit, taxonomy_order, INFRA_DOMAIN
+    dom, sigla, _ = classify_unit("BLUE-FPSO1")
+    assert dom == INFRA_DOMAIN and sigla == "INFRA"
+    dom, sigla, _ = classify_unit("BLUE-PORTO-S")
+    assert sigla == "INFRA"
+    # unidades da taxonomia mantêm seus grupos
+    assert classify_unit("BLUE-SAG-S1")[1] == "VIG"
+    # ordenação: superfície antes de submarino; infra (fora) vai ao fim
+    order = taxonomy_order("blue")
+    assert order["BLUE-SAG-S1"] < order["BLUE-SUB-N"]
+    assert "BLUE-FPSO1" not in order
