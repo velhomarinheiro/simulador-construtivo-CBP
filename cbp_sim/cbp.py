@@ -53,19 +53,21 @@ UNIT_COSTS = {
 # navais, a referência é a estrutura de classificação em três camadas do
 # Artigo 1 — Camada 2, componentes de força de Coutau-Bégarie (Traité,
 # item 350): Dissuasão (DISS), Intervenção (INTERV), Vigilância (VIG),
-# Costeira (COST), Anfíbia (ANF) e Logística (LOG). Seguindo o tratamento
-# do artigo, o multipropósito Atlântico (SAG-P) é computado na componente
-# Anfíbia/Multipropósito. Domínios aéreo e terrestre recebem grupos
-# análogos; o cibernético é tratado por estoques (C2/SEN/WPN/LOG), não
-# por grupos-tarefa.
+# Costeira (COST), Anfíbia (ANF) e Logística (LOG). No cenário, o grupo
+# aeronaval do NAM Atlântico (SAG-P) e a escolta do CSG vermelho (ESCCSG)
+# são computados na componente de Intervenção. Domínios aéreo e terrestre
+# recebem grupos análogos; o cibernético é tratado por estoques
+# (C2/SEN/WPN/LOG), não por grupos-tarefa.
 
 FORCE_TAXONOMY = {
     "blue": [
         {"domain": "⚓ Naval — Superfície", "groups": [
+            {"sigla": "INTERV", "label": "Intervenção (grupo aeronaval)",
+             "units": ["BLUE-SAG-P"]},
             {"sigla": "VIG", "label": "Vigilância (escolta oceânica)",
              "units": ["BLUE-SAG-S1", "BLUE-SAG-S2"]},
-            {"sigla": "ANF", "label": "Anfíbia e multipropósito",
-             "units": ["BLUE-SAG-P", "BLUE-ANFIB"]},
+            {"sigla": "ANF", "label": "Anfíbia",
+             "units": ["BLUE-ANFIB"]},
             {"sigla": "COST", "label": "Costeira (patrulha)",
              "units": ["BLUE-PAT-O1", "BLUE-PAT-O2",
                        "BLUE-PAT-C1", "BLUE-PAT-C2"]},
@@ -97,9 +99,9 @@ FORCE_TAXONOMY = {
     "red": [
         {"domain": "⚓ Naval — Superfície", "groups": [
             {"sigla": "INTERV", "label": "Intervenção (grupo de batalha)",
-             "units": ["RED-GBPA"]},
+             "units": ["RED-GBPA", "RED-GE-1"]},
             {"sigla": "VIG", "label": "Vigilância (escoltas)",
-             "units": ["RED-GE-1", "RED-GE-2", "RED-GE-3"]},
+             "units": ["RED-GE-2", "RED-GE-3"]},
             {"sigla": "ANF", "label": "Anfíbia",
              "units": ["RED-GANF"]},
             {"sigla": "LOG", "label": "Logística",

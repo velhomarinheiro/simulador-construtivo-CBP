@@ -60,9 +60,9 @@ with st.expander("🧭 Composição dos pacotes de força", expanded=False):
         "os meios navais, a referência é a estrutura de classificação em três "
         "camadas (Artigo 1) — Camada 2, componentes de força de Coutau-Bégarie: "
         "**DISS** dissuasão · **INTERV** intervenção · **VIG** vigilância · "
-        "**COST** costeira · **ANF** anfíbia · **LOG** logística. Seguindo o "
-        "artigo, o multipropósito Atlântico (SAG-P) é computado na componente "
-        "anfíbia/multipropósito.")
+        "**COST** costeira · **ANF** anfíbia · **LOG** logística. No cenário, "
+        "o grupo aeronaval do NAM Atlântico (SAG-P) e a escolta do CSG "
+        "vermelho (ESCCSG) são computados na componente de Intervenção.")
     tab_ov, tab_det, tab_threat = st.tabs(
         ["Visão geral (todos os pacotes)", "Detalhe por pacote",
          "Pacotes de ameaça (Vermelha)"])

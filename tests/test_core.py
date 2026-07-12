@@ -475,7 +475,10 @@ def test_unit_group_lookup():
     dom, sigla, label = unit_group("BLUE-SUB-N")
     assert sigla == "DISS" and "Submarino" in dom
     dom, sigla, _ = unit_group("BLUE-SAG-P")
-    assert sigla == "ANF"          # multipropósito Atlântico → anfíbia (Artigo 1)
+    assert sigla == "INTERV"       # grupo aeronaval do NAM Atlântico → intervenção
+    dom, sigla, _ = unit_group("RED-GE-1", side="red")
+    assert sigla == "INTERV"       # ESCCSG integra o grupo de batalha do CSG
+    assert unit_group("RED-GE-2", side="red")[1] == "VIG"
     assert unit_group("INEXISTENTE") is None
 
 
