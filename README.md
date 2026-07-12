@@ -74,6 +74,10 @@ python -m pytest tests/ -q
    Coutau-Bégarie (DISS/INTERV/VIG/COST/ANF/LOG, Camada 2 da estrutura de
    classificação em três camadas do Artigo 1) —, com a composição de cada
    pacote predefinido exibida em matriz-resumo e em detalhe por pacote.
+   As MOEs são também **agregadas por grupo de capacidade**: perdas médias
+   de SP por componente (ex.: DISS/VIG/ANF), em heatmaps na página e em
+   tabelas no relatório comparativo — perdas próprias da força azul e
+   atrito imposto aos componentes da ameaça.
 5. **Bots** — ajuste da doutrina heurística (incl. escolta cerrada);
    geração de dataset por self-play e treino por clonagem comportamental;
    refino por **aprendizado por reforço** (lado, temperatura, pesos da

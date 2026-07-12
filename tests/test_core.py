@@ -519,3 +519,59 @@ def test_classify_unit_infra_fallback_and_order():
     order = taxonomy_order("blue")
     assert order["BLUE-SAG-S1"] < order["BLUE-SUB-N"]
     assert "BLUE-FPSO1" not in order
+
+
+# ── MOEs por grupo de capacidade ─────────────────────────────────────────────
+
+def test_group_loss_metrics_in_game_and_batch():
+    from cbp_sim.montecarlo import group_loss_metrics, summarize_groups
+    st = play_game(blue_bot=HeuristicBot(), red_bot=HeuristicBot(), seed=1)
+    gl = group_loss_metrics(st)
+    assert "grp_blue_DISS" in gl and "grp_red_INTERV" in gl
+    assert all(0.0 <= v <= 100.0 for v in gl.values())
+    df, _ = run_batch(blue_bot_factory=HeuristicBot,
+                      red_bot_factory=HeuristicBot, n_runs=3)
+    assert "grp_blue_VIG" in df.columns
+    means = summarize_groups(df)
+    assert set(means) == {c for c in df.columns if c.startswith("grp_")}
+
+
+def test_group_losses_respect_removed_groups():
+    from cbp_sim.montecarlo import group_loss_metrics
+    from cbp_sim.engine import GameState
+    oob = load_order_of_battle()
+    no_sub = next(p for p in PRESET_PACKAGES
+                  if p.name == "Sem Submarino Nuclear")
+    st = GameState(oob=apply_package(oob, no_sub), seed=1)
+    gl = group_loss_metrics(st)
+    # DISS ainda existe (submarinos convencionais); estado inicial → perdas 0
+    assert gl.get("grp_blue_DISS") == pytest.approx(0.0)
+    # remoção completa de um grupo → chave ausente
+    from cbp_sim.cbp import ForcePackage
+    kill_air = ForcePackage(name="x", modifications={
+        "BLUE-CACA-1": 0, "BLUE-CACA-2": 0})
+    st2 = GameState(oob=apply_package(oob, kill_air), seed=1)
+    assert "grp_blue_DAE" not in group_loss_metrics(st2)
+
+
+def test_comparison_report_includes_group_section():
+    from cbp_sim.reporting import comparison_report_md
+    results = [{
+        "package": "Força Base", "description": "ref", "cost": 100.0,
+        "summary": {
+            "p_blue_win": 0.5, "p_blue_win_ci95": (0.4, 0.6),
+            "mean_fpsos_surviving": 1.0, "mean_port_integrity": 80.0,
+            "mean_blue_losses": 20.0, "mean_red_losses": 40.0,
+            "mean_exchange_ratio": 2.0, "mean_turns": 4.0,
+            "p_timeout": 0.0, "n_runs": 5},
+        "group_losses": {"grp_blue_DISS": 33.3, "grp_blue_VIG": 0.0,
+                         "grp_red_INTERV": 55.0},
+    }]
+    md = comparison_report_md(results)
+    assert "Perdas por grupo de capacidade" in md
+    assert "**DISS**" in md and "33%" in md
+    assert "atrito imposto" in md and "55%" in md
+    # sem group_losses, a seção não aparece
+    results[0]["group_losses"] = None
+    md2 = comparison_report_md(results)
+    assert "Perdas por grupo de capacidade" not in md2

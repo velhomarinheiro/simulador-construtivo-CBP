@@ -11,9 +11,9 @@ from app_utils import BOT_OPTIONS, get_oob, make_bot, page_setup
 from cbp_sim.cbp import (CYBER_DOMAIN_LABEL, FORCE_TAXONOMY, PRESET_PACKAGES,
                          THREAT_PACKAGES, UNIT_COSTS, ForcePackage,
                          apply_package, capability_profile, classify_unit,
-                         package_composition, package_cost, preset_overview,
-                         taxonomy_order)
-from cbp_sim.montecarlo import run_batch, summarize
+                         group_labels, package_composition, package_cost,
+                         preset_overview, taxonomy_order)
+from cbp_sim.montecarlo import run_batch, summarize, summarize_groups
 from cbp_sim.reporting import comparison_report_md
 
 page_setup("Análise CBP")
@@ -224,6 +224,7 @@ if run:
             "cost": package_cost(base_oob, pkg, cost_table),
             "summary": summarize(df), "df": df,
             "profile": capability_profile(oob_mod, "blue", pkg.cyber),
+            "group_losses": summarize_groups(df),
         })
     prog.empty()
     st.session_state["cbp_results"] = results
@@ -303,8 +304,49 @@ with c2:
     st.plotly_chart(fig, use_container_width=True)
     st.caption("Valores relativos ao primeiro pacote da análise.")
 
+# ── Perdas por grupo de capacidade (Camada 2) ────────────────────────────────
+if any(r.get("group_losses") for r in results):
+    st.subheader("Perdas por grupo de capacidade")
+    st.caption("Perdas médias de SP por componente de força (Camada 2 — "
+               "Coutau-Bégarie). À esquerda, o desgaste da força projetada; "
+               "à direita, o atrito imposto aos componentes da ameaça. "
+               "Células vazias = grupo ausente do pacote.")
+    pkg_names_r = [r["package"] for r in results]
+    hm1, hm2 = st.columns(2)
+    for col, side, title, scale in (
+            (hm1, "blue", "🔵 Força Azul — perdas próprias (%SP)", "Reds"),
+            (hm2, "red", "🔴 Força Vermelha — atrito imposto (%SP)", "Teal")):
+        labels = group_labels(side)
+        present = [(sig, lab) for sig, lab in labels
+                   if any(f"grp_{side}_{sig}" in (r.get("group_losses") or {})
+                          for r in results)]
+        if not present:
+            continue
+        z = [[(r.get("group_losses") or {}).get(f"grp_{side}_{sig}")
+              for r in results] for sig, _ in present]
+        hover = [[f"{lab}<br>{r['package']}" for r in results]
+                 for _, lab in present]
+        with col:
+            fig = go.Figure(go.Heatmap(
+                z=z, x=pkg_names_r, y=[sig for sig, _ in present],
+                colorscale=scale, zmin=0, zmax=100,
+                text=hover, hovertemplate="%{text}<br>perda média: "
+                                          "%{z:.0f}%<extra></extra>",
+                texttemplate="%{z:.0f}", textfont=dict(size=10),
+                colorbar=dict(title="%SP")))
+            fig.update_layout(title=title, height=420,
+                              yaxis=dict(autorange="reversed"),
+                              margin=dict(l=10, r=10, t=50, b=10))
+            st.plotly_chart(fig, use_container_width=True)
+    st.caption("Siglas: DISS dissuasão · INTERV intervenção · VIG vigilância "
+               "· COST costeira · ANF anfíbia · LOG logística · DAE defesa "
+               "aérea · PATMAR patrulha/ISR · ATQ ataque · DCOST defesa "
+               "costeira · GBAD antiaérea · OPESP op. especiais · INFRA "
+               "ativos protegidos.")
+
 report = comparison_report_md(
     [{k: r[k] for k in ("package", "description", "cost", "summary")}
+     | {"group_losses": r.get("group_losses")}
      for r in results],
     threat=st.session_state.get("cbp_threat"))
 detail = pd.concat([r["df"].assign(pacote=r["package"]) for r in results])

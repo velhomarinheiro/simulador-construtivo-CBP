@@ -166,6 +166,20 @@ def taxonomy_order(side: str = "blue") -> dict:
     return order
 
 
+def group_labels(side: str = "blue") -> list[tuple[str, str]]:
+    """
+    [(sigla, rótulo)] dos grupos de capacidade na ordem da taxonomia.
+    No lado azul inclui INFRA ao final (ativos protegidos), pois as perdas
+    de infraestrutura são a MOE central do cenário.
+    """
+    out = [(grp["sigla"], grp["label"])
+           for dom in FORCE_TAXONOMY.get(side, [])
+           for grp in dom["groups"]]
+    if side == "blue":
+        out.append(("INFRA", "Infraestrutura crítica (ativos protegidos)"))
+    return out
+
+
 def _effect_label(factor: float) -> str:
     if factor <= 0:
         return "✖ removido"

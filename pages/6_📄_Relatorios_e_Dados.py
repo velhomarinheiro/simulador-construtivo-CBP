@@ -41,6 +41,7 @@ with tab_rep:
         st.markdown("#### Análise de alternativas (CBP)")
         report = comparison_report_md(
             [{k: r[k] for k in ("package", "description", "cost", "summary")}
+             | {"group_losses": r.get("group_losses")}
              for r in cbp_results],
             threat=st.session_state.get("cbp_threat"))
         with st.expander("Pré-visualizar relatório CBP"):

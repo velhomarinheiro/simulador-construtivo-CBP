@@ -20,12 +20,44 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
+from .cbp import classify_unit
 from .engine import GameState, OBJECTIVE_IDS, play_game, load_order_of_battle
 
 
 def _team_sp(state: GameState, team: str, initial: bool = False) -> float:
     return sum((u.max_hp if initial else max(0.0, u.hp))
                for u in state.units if u.team == team)
+
+
+def group_loss_metrics(state: GameState) -> dict:
+    """
+    Perdas de SP (%) por grupo de capacidade, para os dois lados.
+
+    Chaves ``grp_<side>_<SIGLA>`` (ex.: ``grp_blue_DISS``), com as siglas
+    da taxonomia de componentes de força (Camada 2 — Coutau-Bégarie);
+    unidades fora da taxonomia (ativos protegidos) caem em INFRA. Grupos
+    ausentes da força (removidos por um pacote) não geram chave.
+    """
+    out: dict[str, float] = {}
+    for side in ("blue", "red"):
+        agg: dict[str, list[float]] = {}
+        for u in state.units:
+            if u.team != side:
+                continue
+            _dom, sigla, _label = classify_unit(u.id, side)
+            a = agg.setdefault(sigla, [0.0, 0.0])
+            a[0] += u.max_hp
+            a[1] += max(0.0, u.hp)
+        for sigla, (sp0, sp) in agg.items():
+            if sp0 > 0:
+                out[f"grp_{side}_{sigla}"] = 100.0 * (1.0 - sp / sp0)
+    return out
+
+
+def summarize_groups(df: pd.DataFrame) -> dict:
+    """Média por replicação das perdas por grupo (colunas ``grp_*``)."""
+    return {c: float(df[c].mean())
+            for c in df.columns if c.startswith("grp_")}
 
 
 def game_metrics(state: GameState) -> dict:
@@ -57,6 +89,7 @@ def game_metrics(state: GameState) -> dict:
         "blue_obj_achieved": obj["blue"]["achieved"],
         "red_obj_achieved": obj["red"]["achieved"],
         "n_engagements": len(state.engagement_records),
+        **group_loss_metrics(state),
     }
 
 

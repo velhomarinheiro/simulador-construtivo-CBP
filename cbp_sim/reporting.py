@@ -11,6 +11,34 @@ def _fmt_pct(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
+def _group_loss_table(results: list[dict], side: str) -> list[str]:
+    """
+    Tabela Markdown de perdas médias de SP por grupo de capacidade
+    (Camada 2) para um lado, com uma coluna por pacote. Vazia se nenhum
+    resultado tiver as métricas por grupo.
+    """
+    from .cbp import group_labels
+    if not any(r.get("group_losses") for r in results):
+        return []
+    labels = group_labels(side)
+    present = [(sig, lab) for sig, lab in labels
+               if any(f"grp_{side}_{sig}" in (r.get("group_losses") or {})
+                      for r in results)]
+    if not present:
+        return []
+    header = ("| Grupo de capacidade | "
+              + " | ".join(r["package"] for r in results) + " |")
+    sep = "|---|" + "---|" * len(results)
+    lines = [header, sep]
+    for sig, lab in present:
+        cells = []
+        for r in results:
+            v = (r.get("group_losses") or {}).get(f"grp_{side}_{sig}")
+            cells.append("—" if v is None else f"{v:.0f}%")
+        lines.append(f"| **{sig}** — {lab} | " + " | ".join(cells) + " |")
+    return lines
+
+
 def batch_report_md(summary: dict, df: pd.DataFrame, *,
                     title: str = "Relatório de Simulação Construtiva",
                     config: dict | None = None) -> str:
@@ -108,6 +136,25 @@ def comparison_report_md(results: list[dict], *,
             f"{s['mean_port_integrity']:.0f}% | "
             f"{s['mean_blue_losses']:.0f}% | "
             f"{s['mean_exchange_ratio']:.2f} |")
+    blue_tbl = _group_loss_table(results, "blue")
+    red_tbl = _group_loss_table(results, "red")
+    if blue_tbl or red_tbl:
+        lines += [
+            "",
+            "## Perdas por grupo de capacidade",
+            "",
+            "*Perdas médias de SP por componente de força (Camada 2 da "
+            "estrutura de classificação em três camadas — componentes de "
+            "Coutau-Bégarie: DISS dissuasão, INTERV intervenção, VIG "
+            "vigilância, COST costeira, ANF anfíbia, LOG logística; grupos "
+            "análogos nos domínios aéreo e terrestre; INFRA = ativos "
+            "protegidos). “—” = grupo ausente do pacote.*",
+        ]
+        if blue_tbl:
+            lines += ["", "### Força Azul — perdas próprias", ""] + blue_tbl
+        if red_tbl:
+            lines += ["", "### Força Vermelha — atrito imposto", ""] + red_tbl
+
     best_eff = max(results, key=lambda r: r["summary"]["p_blue_win"])
     cheapest = min(results, key=lambda r: r["cost"])
     ratio = [(r, r["summary"]["p_blue_win"] / r["cost"] if r["cost"] else 0)
