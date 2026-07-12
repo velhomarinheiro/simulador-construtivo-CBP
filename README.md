@@ -68,7 +68,12 @@ python -m pytest tests/ -q
    ameaça** (variantes da Força Vermelha); eficácia composta ponderada,
    custo-efetividade com **tabela de custos calibrável** (editor +
    upload/download) e perfil radar de capacidades; relatório comparativo
-   para download.
+   para download. Os meios são organizados por **domínio** (naval-superfície,
+   naval-submarino, aéreo, terrestre, cibernético) e por **grupos de
+   capacidades** — para os meios navais, seguindo os componentes de força de
+   Coutau-Bégarie (DISS/INTERV/VIG/COST/ANF/LOG, Camada 2 da estrutura de
+   classificação em três camadas do Artigo 1) —, com a composição de cada
+   pacote predefinido exibida em matriz-resumo e em detalhe por pacote.
 5. **Bots** — ajuste da doutrina heurística (incl. escolta cerrada);
    geração de dataset por self-play e treino por clonagem comportamental;
    refino por **aprendizado por reforço** (lado, temperatura, pesos da

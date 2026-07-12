@@ -8,9 +8,10 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from app_utils import BOT_OPTIONS, get_oob, make_bot, page_setup
-from cbp_sim.cbp import (PRESET_PACKAGES, THREAT_PACKAGES, UNIT_COSTS,
-                         ForcePackage, apply_package, capability_profile,
-                         package_cost)
+from cbp_sim.cbp import (CYBER_DOMAIN_LABEL, FORCE_TAXONOMY, PRESET_PACKAGES,
+                         THREAT_PACKAGES, UNIT_COSTS, ForcePackage,
+                         apply_package, capability_profile,
+                         package_composition, package_cost, preset_overview)
 from cbp_sim.montecarlo import run_batch, summarize
 from cbp_sim.reporting import comparison_report_md
 
@@ -51,6 +52,53 @@ with st.sidebar:
     run = st.button("▶️ Executar análise", type="primary",
                     use_container_width=True)
 
+with st.expander("🧭 Composição dos pacotes de força", expanded=False):
+    st.caption(
+        "Meios organizados por **domínio** (naval-superfície, naval-submarino, "
+        "aéreo, terrestre e cibernético) e por **grupo de capacidades**. Para "
+        "os meios navais, a referência é a estrutura de classificação em três "
+        "camadas (Artigo 1) — Camada 2, componentes de força de Coutau-Bégarie: "
+        "**DISS** dissuasão · **INTERV** intervenção · **VIG** vigilância · "
+        "**COST** costeira · **ANF** anfíbia · **LOG** logística. Seguindo o "
+        "artigo, o multipropósito Atlântico (SAG-P) é computado na componente "
+        "anfíbia/multipropósito.")
+    tab_ov, tab_det, tab_threat = st.tabs(
+        ["Visão geral (todos os pacotes)", "Detalhe por pacote",
+         "Pacotes de ameaça (Vermelha)"])
+    base_oob = get_oob()
+    _cost_table = st.session_state.get("cost_table")
+
+    with tab_ov:
+        ov = preset_overview(base_oob, PRESET_PACKAGES, _cost_table)
+        st.dataframe(ov, use_container_width=True, hide_index=True,
+                     height=500)
+        st.caption("“—” = grupo inalterado em relação à ordem de batalha de "
+                   "referência. ✖ removido · ▲ reforçado · ⚡ estoque "
+                   "cibernético do pacote. Última linha: custo total (UC).")
+
+    with tab_det:
+        det_sel = st.selectbox("Pacote", [p.name for p in PRESET_PACKAGES],
+                               key="comp_det_sel")
+        pkg_det = next(p for p in PRESET_PACKAGES if p.name == det_sel)
+        desc = (pkg_det.description
+                or "Ordem de batalha de referência, sem modificações.")
+        st.markdown(f"**{pkg_det.name}** — {desc}")
+        st.metric("Custo do pacote",
+                  f"{package_cost(base_oob, pkg_det, _cost_table):.1f} UC")
+        comp = package_composition(base_oob, pkg_det)
+        st.dataframe(comp, use_container_width=True, hide_index=True,
+                     height=480)
+
+    with tab_threat:
+        thr_sel = st.selectbox("Pacote de ameaça",
+                               [p.name for p in THREAT_PACKAGES],
+                               key="comp_thr_sel")
+        thr_det = next(p for p in THREAT_PACKAGES if p.name == thr_sel)
+        st.markdown(f"**{thr_det.name}** — {thr_det.description}")
+        comp_r = package_composition(base_oob, thr_det)
+        st.dataframe(comp_r, use_container_width=True, hide_index=True,
+                     height=420)
+
 with st.expander("💰 Tabela de custos (calibrável)"):
     st.caption("Custos ilustrativos por grupo-tarefa, em unidades de custo "
                "(UC ≈ R$ bi, ciclo de vida ~10 anos). Edite para calibrar "
@@ -87,30 +135,54 @@ with st.expander("💰 Tabela de custos (calibrável)"):
             st.error(f"Arquivo inválido: {e}")
 
 with st.expander("➕ Pacote personalizado"):
-    st.caption("Escale grupos-tarefa da Força Azul (0 = remover, 1 = manter, "
-               "2 = dobrar) e defina o estoque cibernético. O custo é "
-               "recalculado automaticamente.")
+    st.caption("Monte um pacote de força escalando os grupos-tarefa por "
+               "**domínio** e **grupo de capacidade** (0 = remover, 1 = "
+               "manter, 1.5 = reforçar, 2 = dobrar) e definindo o estoque "
+               "cibernético. O custo é recalculado automaticamente.")
     base_oob = get_oob()
+    specs = {s["id"]: s for s in base_oob["forces"]["blue"]}
     custom_name = st.text_input("Nome do pacote", "Personalizado 1")
     mods = {}
-    cols = st.columns(4)
-    for i, spec in enumerate(base_oob["forces"]["blue"]):
-        if spec["id"] not in UNIT_COSTS:
+    for dom in FORCE_TAXONOMY["blue"]:
+        dom_units = [u for g in dom["groups"] for u in g["units"]
+                     if u in specs and u in UNIT_COSTS]
+        if not dom_units:
             continue
-        with cols[i % 4]:
-            mods[spec["id"]] = st.slider(
-                f"{spec['name']}", 0.0, 2.0, 1.0, 0.5, key=f"mod_{spec['id']}")
-    st.markdown("**⚡ Estoque cibernético do pacote**")
+        st.markdown(f"##### {dom['domain']}")
+        for grp in dom["groups"]:
+            units = [u for u in grp["units"]
+                     if u in specs and u in UNIT_COSTS]
+            if not units:
+                continue
+            st.markdown(f"**{grp['sigla']}** · {grp['label']}")
+            gcols = st.columns(max(2, min(4, len(units))))
+            for i, uid in enumerate(units):
+                spec = specs[uid]
+                comp = " + ".join(
+                    f"{c['quantity']}× {c['type'].replace('_', ' ')}"
+                    for c in (spec.get("composition") or []))
+                with gcols[i % len(gcols)]:
+                    mods[uid] = st.slider(
+                        spec["name"], 0.0, 2.0, 1.0, 0.5,
+                        key=f"mod_{uid}",
+                        help=f"{comp or '—'} · SP {spec['stayingPower']} · "
+                             f"custo base {UNIT_COSTS.get(uid, 0):.1f} UC")
+    st.markdown(f"##### {CYBER_DOMAIN_LABEL}")
+    st.markdown("**CIB** · Guerra cibernética — estoques por subtipo "
+                "(C2 comando · SEN sensores · WPN armas · LOG logística)")
     ccols = st.columns(4)
     custom_cyber = {}
     for i, s in enumerate(("C2", "SEN", "WPN", "LOG")):
         custom_cyber[s] = ccols[i].slider(s, 0, 5, 0, key=f"cyb_{s}")
+
+    preview = ForcePackage(
+        name=custom_name, description="Pacote definido pelo usuário.",
+        modifications={k: v for k, v in mods.items() if v != 1.0},
+        cyber={k: v for k, v in custom_cyber.items() if v > 0})
+    st.metric("Custo estimado do pacote",
+              f"{package_cost(base_oob, preview, st.session_state.get('cost_table')):.1f} UC")
     if st.button("Adicionar pacote personalizado à análise"):
-        pkg = ForcePackage(
-            name=custom_name, description="Pacote definido pelo usuário.",
-            modifications={k: v for k, v in mods.items() if v != 1.0},
-            cyber={k: v for k, v in custom_cyber.items() if v > 0})
-        st.session_state.setdefault("custom_packages", []).append(pkg)
+        st.session_state.setdefault("custom_packages", []).append(preview)
         st.success(f"Pacote “{custom_name}” adicionado.")
 
 all_packages = {p.name: p for p in PRESET_PACKAGES}

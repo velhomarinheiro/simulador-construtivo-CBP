@@ -450,3 +450,55 @@ def test_csv_rejects_single_sided_force():
     from cbp_sim.oob_io import csv_to_oob
     with pytest.raises(ValueError):
         csv_to_oob("id,team,category,stayingPower\nBLUE-X,blue,surface,4\n")
+
+
+# ── Taxonomia de domínios e grupos de capacidade ─────────────────────────────
+
+def test_taxonomy_covers_costed_blue_units_exactly():
+    from cbp_sim.cbp import FORCE_TAXONOMY, UNIT_COSTS
+    tax_units = {u for d in FORCE_TAXONOMY["blue"]
+                 for g in d["groups"] for u in g["units"]}
+    assert tax_units == set(UNIT_COSTS)
+
+
+def test_taxonomy_red_covers_full_red_oob():
+    from cbp_sim.cbp import FORCE_TAXONOMY
+    oob = load_order_of_battle()
+    tax_red = {u for d in FORCE_TAXONOMY["red"]
+               for g in d["groups"] for u in g["units"]}
+    red_ids = {s["id"] for s in oob["forces"]["red"]}
+    assert tax_red == red_ids
+
+
+def test_unit_group_lookup():
+    from cbp_sim.cbp import unit_group
+    dom, sigla, label = unit_group("BLUE-SUB-N")
+    assert sigla == "DISS" and "Submarino" in dom
+    dom, sigla, _ = unit_group("BLUE-SAG-P")
+    assert sigla == "ANF"          # multipropósito Atlântico → anfíbia (Artigo 1)
+    assert unit_group("INEXISTENTE") is None
+
+
+def test_package_composition_marks_effects():
+    from cbp_sim.cbp import package_composition
+    oob = load_order_of_battle()
+    pkg = next(p for p in PRESET_PACKAGES if p.name == "Sem Submarino Nuclear")
+    df = package_composition(oob, pkg)
+    row = df[df["Grupo-tarefa"] == "SBN"].iloc[0]
+    assert "removido" in row["Efeito do pacote"]
+    assert "DISS" in row["Grupo de capacidade"]
+    # pacote ciber tem a linha do domínio cibernético preenchida
+    cyber_pkg = next(p for p in PRESET_PACKAGES
+                     if p.name == "Guerra Ciber Ofensiva")
+    dfc = package_composition(oob, cyber_pkg)
+    cyber_row = dfc[dfc["Domínio"].str.contains("Cibernético")].iloc[0]
+    assert "WPN" in cyber_row["Composição"]
+
+
+def test_preset_overview_has_all_packages_and_cost_row():
+    from cbp_sim.cbp import preset_overview
+    oob = load_order_of_battle()
+    ov = preset_overview(oob, PRESET_PACKAGES)
+    for p in PRESET_PACKAGES:
+        assert p.name in ov.columns
+    assert (ov["Grupo de capacidade"] == "Custo total (UC)").any()

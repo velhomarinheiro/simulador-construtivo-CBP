@@ -47,6 +47,196 @@ UNIT_COSTS = {
     # não itens de aquisição — custo 0 na comparação de pacotes de força.
 }
 
+# ── Taxonomia: domínios e grupos de capacidade ───────────────────────────────
+# Organização dos meios por domínio (naval-superfície, naval-submarino,
+# aéreo, terrestre, cibernético) e por grupo de capacidades. Para os meios
+# navais, a referência é a estrutura de classificação em três camadas do
+# Artigo 1 — Camada 2, componentes de força de Coutau-Bégarie (Traité,
+# item 350): Dissuasão (DISS), Intervenção (INTERV), Vigilância (VIG),
+# Costeira (COST), Anfíbia (ANF) e Logística (LOG). Seguindo o tratamento
+# do artigo, o multipropósito Atlântico (SAG-P) é computado na componente
+# Anfíbia/Multipropósito. Domínios aéreo e terrestre recebem grupos
+# análogos; o cibernético é tratado por estoques (C2/SEN/WPN/LOG), não
+# por grupos-tarefa.
+
+FORCE_TAXONOMY = {
+    "blue": [
+        {"domain": "⚓ Naval — Superfície", "groups": [
+            {"sigla": "VIG", "label": "Vigilância (escolta oceânica)",
+             "units": ["BLUE-SAG-S1", "BLUE-SAG-S2"]},
+            {"sigla": "ANF", "label": "Anfíbia e multipropósito",
+             "units": ["BLUE-SAG-P", "BLUE-ANFIB"]},
+            {"sigla": "COST", "label": "Costeira (patrulha)",
+             "units": ["BLUE-PAT-O1", "BLUE-PAT-O2",
+                       "BLUE-PAT-C1", "BLUE-PAT-C2"]},
+            {"sigla": "LOG", "label": "Logística (trem de esquadra)",
+             "units": ["BLUE-LOG-A", "BLUE-LOG-T"]},
+        ]},
+        {"domain": "🌊 Naval — Submarino", "groups": [
+            {"sigla": "DISS", "label": "Dissuasão (negação do mar)",
+             "units": ["BLUE-SUB-N", "BLUE-SUB-1", "BLUE-SUB-2",
+                       "BLUE-SUB-3"]},
+        ]},
+        {"domain": "✈️ Aéreo", "groups": [
+            {"sigla": "DAE", "label": "Defesa aérea / superioridade",
+             "units": ["BLUE-CACA-1", "BLUE-CACA-2"]},
+            {"sigla": "PATMAR", "label": "Patrulha marítima e ISR",
+             "units": ["BLUE-MPRA-1", "BLUE-MPRA-2"]},
+            {"sigla": "ATQ", "label": "Ataque aeronaval",
+             "units": ["BLUE-CJAT-1", "BLUE-CJAT-2"]},
+        ]},
+        {"domain": "🏔️ Terrestre", "groups": [
+            {"sigla": "DCOST", "label": "Defesa costeira (A2/AD)",
+             "units": ["BLUE-DCOST1", "BLUE-DCOST2"]},
+            {"sigla": "GBAD", "label": "Defesa antiaérea",
+             "units": ["BLUE-ADA-1", "BLUE-ADA-2"]},
+            {"sigla": "OPESP", "label": "Operações especiais",
+             "units": ["BLUE-SEOP"]},
+        ]},
+    ],
+    "red": [
+        {"domain": "⚓ Naval — Superfície", "groups": [
+            {"sigla": "INTERV", "label": "Intervenção (grupo de batalha)",
+             "units": ["RED-GBPA"]},
+            {"sigla": "VIG", "label": "Vigilância (escoltas)",
+             "units": ["RED-GE-1", "RED-GE-2", "RED-GE-3"]},
+            {"sigla": "ANF", "label": "Anfíbia",
+             "units": ["RED-GANF"]},
+            {"sigla": "LOG", "label": "Logística",
+             "units": ["RED-AOR-G", "RED-GLOG", "RED-AKE"]},
+        ]},
+        {"domain": "🌊 Naval — Submarino", "groups": [
+            {"sigla": "DISS", "label": "Dissuasão (negação do mar)",
+             "units": ["RED-KSN", "RED-KS-1"]},
+        ]},
+        {"domain": "✈️ Aéreo", "groups": [
+            {"sigla": "DAE", "label": "Caça embarcada",
+             "units": ["RED-KMF-1", "RED-KMF-2"]},
+            {"sigla": "PATMAR", "label": "Patrulha marítima e AEW",
+             "units": ["RED-MPRA-K1", "RED-MPRA-K2", "RED-AWACS-K"]},
+        ]},
+        {"domain": "🏔️ Terrestre", "groups": [
+            {"sigla": "OPESP", "label": "Operações especiais",
+             "units": ["RED-SEOP", "RED-SEOP-2"]},
+        ]},
+    ],
+}
+
+CYBER_DOMAIN_LABEL = "⚡ Cibernético"
+
+
+def unit_group(unit_id: str, side: str = "blue"):
+    """(domínio, sigla, rótulo do grupo) de um grupo-tarefa, ou None."""
+    for dom in FORCE_TAXONOMY.get(side, []):
+        for grp in dom["groups"]:
+            if unit_id in grp["units"]:
+                return dom["domain"], grp["sigla"], grp["label"]
+    return None
+
+
+def _effect_label(factor: float) -> str:
+    if factor <= 0:
+        return "✖ removido"
+    if factor == 1.0:
+        return "—"
+    if factor > 1.0:
+        return f"▲ ×{factor:g}" if factor >= 2 else f"▲ +{(factor - 1):.0%}"
+    return f"▼ −{(1 - factor):.0%}"
+
+
+def _composition_str(spec: dict) -> str:
+    return " + ".join(f"{c['quantity']}× {c['type'].replace('_', ' ')}"
+                      for c in (spec.get("composition") or []))
+
+
+def package_composition(oob: dict, pkg: ForcePackage) -> "pd.DataFrame":
+    """
+    Composição de um pacote de força, organizada por domínio e grupo de
+    capacidade: toda a força do lado do pacote, com a coluna "Efeito"
+    indicando o que o pacote muda (removido / reforçado / adicionado),
+    mais a linha do estoque cibernético.
+    """
+    import pandas as pd
+    specs = {s["id"]: s for s in oob["forces"][pkg.side]}
+    rows = []
+    for dom in FORCE_TAXONOMY.get(pkg.side, []):
+        for grp in dom["groups"]:
+            for uid in grp["units"]:
+                spec = specs.get(uid)
+                if spec is None:
+                    continue
+                factor = pkg.modifications.get(uid, 1.0)
+                rows.append({
+                    "Domínio": dom["domain"],
+                    "Grupo de capacidade": f"{grp['sigla']} — {grp['label']}",
+                    "Grupo-tarefa": spec.get("name", uid),
+                    "Composição": _composition_str(spec),
+                    "Efeito do pacote": _effect_label(factor),
+                })
+    for extra in pkg.additions:
+        tax = unit_group(extra.get("id", ""), pkg.side)
+        rows.append({
+            "Domínio": tax[0] if tax else "⚓ Naval — Superfície",
+            "Grupo de capacidade": (f"{tax[1]} — {tax[2]}" if tax
+                                    else "(novo grupo)"),
+            "Grupo-tarefa": extra.get("name", extra.get("id", "novo")),
+            "Composição": _composition_str(extra),
+            "Efeito do pacote": "✚ adicionado",
+        })
+    cyber = pkg.cyber or {}
+    rows.append({
+        "Domínio": CYBER_DOMAIN_LABEL,
+        "Grupo de capacidade": "CIB — Guerra cibernética (C2/SEN/WPN/LOG)",
+        "Grupo-tarefa": "Estoque cibernético",
+        "Composição": (" · ".join(f"{k}:{v}" for k, v in cyber.items())
+                       if cyber else "sem estoque"),
+        "Efeito do pacote": ("⚡ " + " · ".join(f"{k}+{v}"
+                                               for k, v in cyber.items())
+                             if cyber else "—"),
+    })
+    return pd.DataFrame(rows)
+
+
+def preset_overview(oob: dict, packages: list,
+                    cost_table: dict | None = None) -> "pd.DataFrame":
+    """
+    Matriz-resumo pacote × grupo de capacidade (lado azul): cada célula
+    mostra o efeito líquido do pacote sobre o grupo ("—" = inalterado).
+    Inclui as linhas de estoque cibernético e custo total.
+    """
+    import pandas as pd
+    side = "blue"
+    specs = {s["id"]: s for s in oob["forces"][side]}
+    rows = []
+    for dom in FORCE_TAXONOMY[side]:
+        for grp in dom["groups"]:
+            row = {"Domínio": dom["domain"],
+                   "Grupo de capacidade": f"{grp['sigla']} — {grp['label']}"}
+            for pkg in packages:
+                effects = []
+                for uid in grp["units"]:
+                    if uid not in specs:
+                        continue
+                    f = pkg.modifications.get(uid, 1.0)
+                    if f != 1.0:
+                        effects.append(
+                            f"{specs[uid].get('name', uid)} "
+                            f"{_effect_label(f)}")
+                row[pkg.name] = "; ".join(effects) if effects else "—"
+            rows.append(row)
+    cyber_row = {"Domínio": CYBER_DOMAIN_LABEL,
+                 "Grupo de capacidade": "CIB — Estoque cibernético"}
+    cost_row = {"Domínio": "💰", "Grupo de capacidade": "Custo total (UC)"}
+    for pkg in packages:
+        cyber_row[pkg.name] = (" · ".join(f"{k}:{v}"
+                                          for k, v in pkg.cyber.items())
+                               if pkg.cyber else "—")
+        cost_row[pkg.name] = f"{package_cost(oob, pkg, cost_table):.1f}"
+    rows.append(cyber_row)
+    rows.append(cost_row)
+    return pd.DataFrame(rows)
+
+
 # Áreas de capacidade p/ o perfil radar (agregação da ordem de batalha)
 CAPABILITY_AREAS = {
     "Antissubmarino (ASW)": lambda u: u.get("capabilities", {}).get("asw", 0),
