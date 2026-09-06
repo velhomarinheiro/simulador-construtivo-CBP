@@ -34,6 +34,7 @@ python -m pytest tests/ -q
 | Névoa de guerra (opcional) | Detecção por alcances por categoria (noite −1 hex; infraestrutura fixa sempre conhecida; Φ ciber degrada sensores); ataques exigem alvo detectado e, sem contato, o Azul assume estações defensivas junto às FPSOs/portos |
 | Bot heurístico | Porte da IA do modo solo do wargame (doutrina orientada a objetivos, proteção de logística, gerência de combustível) + doutrina configurável de **escolta cerrada** de ativos críticos (defesa em grupo por empilhamento) |
 | Extração de cenários | **Log-cluster analysis** (Sakata et al., JACIII 2023): código-string por partida → distância de Levenshtein → agrupamento hierárquico → árvore de decisão para os **fatores de bifurcação**, com validação cruzada e Mann-Whitney U |
+| Captura da decisão humana | **Performance Sheet + MDDM** (Sakata et al., ITCA 2020): registro por turno da cognição do jogador e da prioridade entre condições de vitória, com descrição formal em diagrama de decisão — protocolo em `docs/PROTOCOLO_MDDM_performance_sheet.md` |
 | Custo-efetividade | **DEA** (Sakata et al., IJAS 2021), modelos CCR/BCC orientados a insumo: pesos endógenos, fronteira de eficiência e reference sets |
 | Bot de aprendizado de máquina | Pipeline em duas etapas: **clonagem comportamental** inspirada em `ml/train_bot.py` (estado 9×10×16 → redes de pontuação dos 160 hexes, em numpy puro) seguida de **aprendizado por reforço** (REINFORCE em auto-jogo contra o heurístico, recompensa orientada à missão, baseline de lote e bônus de entropia) |
 
@@ -55,6 +56,7 @@ python -m pytest tests/ -q
 | `cbp_sim/logcluster.py` | Log-cluster analysis: códigos-string, Levenshtein, cenários e fatores de bifurcação |
 | `cbp_sim/reporting.py` | Relatórios em Markdown |
 | `cbp_sim/data/` | Ordem de batalha e tabelas de combate (exportadas do wargame) |
+| `docs/` | Especificação da taxonomia de capacidades, taxonomia em JSON e **protocolo MDDM + Performance Sheet** (coleta com jogadores humanos) |
 | `tests/` | Testes do núcleo (salva, motor, bots, CBP) |
 
 ## Fluxo de análise
