@@ -25,6 +25,7 @@ pages = [
     st.Page("pages/3_🎲_Monte_Carlo.py", title="Monte Carlo", icon="🎲"),
     st.Page("pages/4_📊_Analise_CBP.py", title="Análise CBP", icon="📊"),
     st.Page("pages/5_🤖_Bots.py", title="Bots", icon="🤖"),
+    st.Page("pages/7_🧬_Cenarios.py", title="Cenários", icon="🧬"),
     st.Page("pages/6_📄_Relatorios_e_Dados.py",
             title="Relatórios e Dados", icon="📄"),
 ]

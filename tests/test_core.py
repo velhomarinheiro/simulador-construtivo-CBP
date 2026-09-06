@@ -673,3 +673,108 @@ def test_comparison_report_includes_dea_section():
     assert "BCC" in md and "λ=0.90" in md and "aviso de teste" in md
     # sem DEA, a seção não aparece
     assert "Fronteira de eficiência (DEA)" not in comparison_report_md(results)
+
+
+# ── Log-cluster analysis (cenários e fatores de bifurcação) ──────────────────
+
+def test_levenshtein_known_values():
+    from cbp_sim.logcluster import levenshtein
+    assert levenshtein("kitten", "sitting") == 3
+    assert levenshtein("", "abc") == 3
+    assert levenshtein("abc", "") == 3
+    assert levenshtein("abc", "abc") == 0
+    assert levenshtein("DIV", "DAV") == 1
+    # simetria
+    assert levenshtein("DAIV", "DAI") == levenshtein("DAI", "DAIV")
+
+
+def test_encode_trail_uses_capability_alphabet_and_horizon():
+    from cbp_sim.logcluster import CAMPAIGN_END, NO_ACTION, encode_trail
+    trail = {"events": [
+        {"event": "attacks_declared", "team": "blue",
+         "attacks": [{"targetId": "RED-GBPA"}, {"targetId": "RED-GE-1"}]},
+        {"event": "attacks_declared", "team": "red",     # outro lado: ignorado
+         "attacks": [{"targetId": "BLUE-FPSO1"}]},
+        {"event": "attacks_declared", "team": "blue", "attacks": []},
+        {"event": "attacks_declared", "team": "blue",
+         "attacks": [{"targetId": "RED-KSN"}]},
+    ]}
+    # GBPA e GE-1 são INTERV → "I"; sem ataque → "-"; KSN é DISS → "D"
+    assert encode_trail(trail, "blue") == "I" + NO_ACTION + "D"
+    # horizonte trunca e preenche
+    assert encode_trail(trail, "blue", horizon=2) == "I" + NO_ACTION
+    assert encode_trail(trail, "blue", horizon=5) == \
+        "I" + NO_ACTION + "D" + CAMPAIGN_END * 2
+
+
+def test_suggest_horizon_and_equal_lengths():
+    from cbp_sim.logcluster import encode_trails, suggest_horizon
+    codes = ["AAAA", "AAAAAAAA", "AAAAAA", "AAAAAAAAAA", "AAA"]
+    h = suggest_horizon(codes, coverage=0.8)
+    assert 1 <= h <= min(len(c) for c in codes) + 3
+    # com horizonte, todos os códigos ficam do mesmo comprimento
+    trails = [{"events": [{"event": "attacks_declared", "team": "blue",
+                           "attacks": [{"targetId": "RED-KSN"}]}] * n}
+              for n in (2, 5, 9)]
+    saidas = encode_trails(trails, "blue", horizon=4)
+    assert {len(c) for c in saidas} == {4}
+
+
+def test_cluster_and_branch_factor_on_separable_codes():
+    from cbp_sim.logcluster import (DecisionTree, cluster_codes, featurize)
+    # dois grupos que diferem exatamente no 3º turno
+    codes = ["DAIV"] * 8 + ["DALV"] * 8
+    labels, Z, _ = cluster_codes(codes, n_clusters=2, method="average")
+    assert len(set(labels)) == 2
+    F, nomes = featurize(codes)
+    tree = DecisionTree(max_depth=2).fit(F, np.asarray(labels), nomes)
+    fator, ganho = tree.root_factor()
+    assert fator.startswith("t3=")        # o turno que de fato separa
+    assert ganho > 0.9                    # separação praticamente perfeita
+    assert (tree.predict(F) == np.asarray(labels)).all()
+
+
+def test_cross_validate_perfect_separation():
+    from cbp_sim.logcluster import cross_validate, featurize
+    codes = ["DAIV"] * 10 + ["DALV"] * 10
+    y = np.array([1] * 10 + [2] * 10)
+    F, nomes = featurize(codes)
+    cv = cross_validate(F, y, nomes, k=4, max_depth=2, seed=0)
+    assert cv["acuracia"] == pytest.approx(1.0)
+    for m in cv["por_cenario"].values():
+        assert m["f1"] == pytest.approx(1.0)
+
+
+def test_compare_scenarios_mann_whitney():
+    from cbp_sim.logcluster import compare_scenarios
+    labels = np.array([1] * 10 + [2] * 10)
+    vals = np.concatenate([np.ones(10) * 2.0, np.ones(10) * 9.0])
+    mw = compare_scenarios(vals, labels, 1, 2)
+    assert mw["p"] < 0.01
+    assert mw["mediana_a"] == 2.0 and mw["mediana_b"] == 9.0
+    assert mw["n_a"] == 10 and mw["n_b"] == 10
+    # cenário vazio não quebra
+    vazio = compare_scenarios(vals, labels, 1, 99)
+    assert vazio["n_b"] == 0 and np.isnan(vazio["p"])
+
+
+def test_log_cluster_pipeline_end_to_end_on_real_trails():
+    from cbp_sim.logcluster import (encode_trails, run_log_cluster_analysis,
+                                    suggest_horizon, trail_outcomes)
+    _, trails = run_batch(blue_bot_factory=HeuristicBot,
+                          red_bot_factory=HeuristicBot, n_runs=12,
+                          collect_events=True, fog_of_war=True)
+    h = suggest_horizon(encode_trails(trails, "blue"))
+    res = run_log_cluster_analysis(trails, side="blue", n_clusters=2,
+                                   max_depth=2, cv_folds=3, horizon=h)
+    assert len(res.codes) == 12
+    assert {len(c) for c in res.codes} == {h}      # horizonte comum aplicado
+    assert set(res.labels) <= {1, 2}
+    assert 0.0 <= res.cv["acuracia"] <= 1.0
+    tab = res.scenario_table()
+    assert tab["Partidas"].sum() == 12
+    # MOEs extraídas da própria trilha (auto-suficiente p/ JSONL importado)
+    out = trail_outcomes(trails)
+    assert len(out) == 12
+    assert out["winner"].isin(["blue", "red"]).all()
+    assert out["fpsos_surviving"].between(0, 4).all()
