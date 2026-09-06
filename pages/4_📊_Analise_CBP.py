@@ -13,6 +13,8 @@ from cbp_sim.cbp import (CYBER_DOMAIN_LABEL, FORCE_TAXONOMY, PRESET_PACKAGES,
                          apply_package, capability_profile, classify_unit,
                          group_labels, package_composition, package_cost,
                          preset_overview, taxonomy_order)
+from cbp_sim.dea import (DEA_INPUTS, DEA_OUTPUTS, build_matrices,
+                         discrimination_note, run_dea)
 from cbp_sim.montecarlo import run_batch, summarize, summarize_groups
 from cbp_sim.reporting import comparison_report_md
 
@@ -304,6 +306,138 @@ with c2:
     st.plotly_chart(fig, use_container_width=True)
     st.caption("Valores relativos ao primeiro pacote da análise.")
 
+# ── Fronteira DEA ────────────────────────────────────────────────────────────
+st.subheader("Fronteira de eficiência (DEA)")
+st.markdown(
+    "A **Análise Envoltória de Dados** dispensa os pesos fixos da eficácia "
+    "composta: cada pacote é avaliado sob os pesos que lhe são **mais "
+    "favoráveis**, obtidos por programação linear. Produz a *fronteira* de "
+    "pacotes não dominados, o escore θ ∈ (0, 1] de cada um e — o resultado "
+    "prescritivo — o **reference set**: quais pacotes eficientes um pacote "
+    "ineficiente deveria imitar, e em que proporção.")
+
+dc1, dc2, dc3 = st.columns([2, 2, 1])
+dea_inputs = dc1.multiselect(
+    "Insumos (menos é melhor)", list(DEA_INPUTS),
+    default=["Custo (UC)", "Perdas Azul (%SP)"], key="dea_in")
+dea_outputs = dc2.multiselect(
+    "Produtos / MOEs (mais é melhor)", list(DEA_OUTPUTS),
+    default=["FPSOs sobreviventes", "Integridade portuária (%)",
+             "P(vitória Azul)"], key="dea_out")
+dea_model = dc3.radio(
+    "Modelo", ["BCC", "CCR"], key="dea_model",
+    help="CCR: retornos constantes de escala. BCC: retornos variáveis — "
+         "em geral mais defensável para pacotes de força, pois dobrar o "
+         "orçamento raramente dobra a capacidade operativa.")
+
+if not dea_inputs or not dea_outputs:
+    st.warning("Selecione ao menos um insumo e um produto.")
+elif len(results) < 2:
+    st.info("A DEA exige ao menos dois pacotes na análise.")
+else:
+    nota = discrimination_note(len(results), len(dea_inputs), len(dea_outputs))
+    if nota:
+        st.warning(f"⚠️ {nota}")
+    names_d, Xd, Yd = build_matrices(results, dea_inputs, dea_outputs)
+    dea = run_dea(names_d, Xd, Yd, dea_inputs, dea_outputs, model=dea_model)
+
+    def _peers_str(i):
+        p = {k: v for k, v in dea.peers[i].items() if k != names_d[i]}
+        if dea.is_efficient[i]:
+            return "— (é referência)"
+        return " · ".join(f"{k} (λ={v:.2f})" for k, v in
+                          sorted(p.items(), key=lambda kv: -kv[1])) or "—"
+
+    dea_rows = []
+    for i, nome in enumerate(names_d):
+        alvo = dea.targets(i)
+        dea_rows.append({
+            "Pacote": nome,
+            "θ (eficiência)": dea.efficiency[i],
+            "Situação": "✅ eficiente" if dea.is_efficient[i] else "ineficiente",
+            "Folga radial": 1.0 - dea.efficiency[i],
+            "Referências a imitar (peers)": _peers_str(i),
+            **{f"Alvo: {k}": v for k, v in alvo.items()},
+        })
+    dea_tbl = pd.DataFrame(dea_rows).sort_values("θ (eficiência)",
+                                                 ascending=False)
+    fmt = {"θ (eficiência)": "{:.3f}", "Folga radial": "{:.0%}"}
+    fmt.update({c: "{:.1f}" for c in dea_tbl.columns if c.startswith("Alvo:")})
+    st.dataframe(dea_tbl.style.format(fmt), use_container_width=True,
+                 hide_index=True)
+    st.caption(
+        "**θ** = 1 → pacote na fronteira. **Folga radial** = redução "
+        "proporcional de insumos que o pacote precisaria alcançar para "
+        "ficar eficiente, mantendo os mesmos produtos. **Alvo** = nível de "
+        "insumo correspondente (θ·x).")
+
+    d1, d2 = st.columns(2)
+    with d1:
+        ordem = dea_tbl.sort_values("θ (eficiência)")
+        fig = go.Figure(go.Bar(
+            x=ordem["θ (eficiência)"], y=ordem["Pacote"], orientation="h",
+            marker_color=["#2e7d4f" if s.startswith("✅") else "#1f4e79"
+                          for s in ordem["Situação"]],
+            text=[f"{v:.3f}" for v in ordem["θ (eficiência)"]],
+            textposition="auto"))
+        fig.add_vline(x=1.0, line_dash="dash", line_color="#2e7d4f")
+        fig.update_layout(title=f"Escore de eficiência θ — modelo {dea_model}",
+                          xaxis_title="θ", height=420,
+                          xaxis=dict(range=[0, 1.08]),
+                          margin=dict(l=10, r=10, t=50, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+    with d2:
+        eixo_x = dea_inputs[0]
+        eixo_y = dea_outputs[0]
+        fig = go.Figure()
+        for i, nome in enumerate(names_d):
+            efic = dea.is_efficient[i]
+            fig.add_trace(go.Scatter(
+                x=[Xd[i, 0]], y=[Yd[i, 0]], mode="markers+text",
+                text=[nome], textposition="top center",
+                marker=dict(size=17 if efic else 12,
+                            color="#2e7d4f" if efic else "#1f4e79",
+                            symbol="star" if efic else "circle",
+                            line=dict(width=1.5, color="white")),
+                name=nome, showlegend=False,
+                hovertemplate=f"<b>{nome}</b><br>θ={dea.efficiency[i]:.3f}"
+                              "<extra></extra>"))
+        fig.update_layout(title="Pacotes no plano insumo × produto",
+                          xaxis_title=eixo_x, yaxis_title=eixo_y, height=420,
+                          margin=dict(l=10, r=10, t=50, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("★ = pacote na fronteira. Projeção 2-D do primeiro insumo "
+                   "e do primeiro produto selecionados; θ considera todas as "
+                   "dimensões.")
+
+    with st.expander("🔎 Pesos ótimos e grupos por reference set"):
+        st.markdown("**Pesos ótimos por pacote** — sob que critério cada um "
+                    "obtém sua melhor avaliação. Peso nulo indica dimensão "
+                    "que o pacote *não* consegue usar a seu favor.")
+        w_rows = []
+        for i, nome in enumerate(names_d):
+            row = {"Pacote": nome}
+            row.update({f"v · {k}": dea.input_weights[i, j]
+                        for j, k in enumerate(dea_inputs)})
+            row.update({f"u · {k}": dea.output_weights[i, j]
+                        for j, k in enumerate(dea_outputs)})
+            w_rows.append(row)
+        st.dataframe(pd.DataFrame(w_rows), use_container_width=True,
+                     hide_index=True)
+
+        st.markdown("**Grupos por reference set compartilhado** — pacotes que "
+                    "referenciam os mesmos peers são avaliados sob critério "
+                    "semelhante (Sakata et al., 2021).")
+        for sig, membros in dea.reference_groups().items():
+            ref = " + ".join(sig) if sig else "—"
+            st.markdown(f"- **Referência {ref}** → {', '.join(membros)}")
+
+    st.session_state["cbp_dea"] = {
+        "model": dea_model, "inputs": dea_inputs, "outputs": dea_outputs,
+        "names": names_d, "efficiency": dea.efficiency.tolist(),
+        "peers": dea.peers, "note": nota,
+    }
+
 # ── Perdas por grupo de capacidade (Camada 2) ────────────────────────────────
 if any(r.get("group_losses") for r in results):
     st.subheader("Perdas por grupo de capacidade")
@@ -348,7 +482,8 @@ report = comparison_report_md(
     [{k: r[k] for k in ("package", "description", "cost", "summary")}
      | {"group_losses": r.get("group_losses")}
      for r in results],
-    threat=st.session_state.get("cbp_threat"))
+    threat=st.session_state.get("cbp_threat"),
+    dea=st.session_state.get("cbp_dea"))
 detail = pd.concat([r["df"].assign(pacote=r["package"]) for r in results])
 c1, c2 = st.columns(2)
 c1.download_button("⬇️ Relatório comparativo (Markdown)",

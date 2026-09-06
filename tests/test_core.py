@@ -575,3 +575,101 @@ def test_comparison_report_includes_group_section():
     results[0]["group_losses"] = None
     md2 = comparison_report_md(results)
     assert "Perdas por grupo de capacidade" not in md2
+
+
+# ── DEA (Análise Envoltória de Dados) ────────────────────────────────────────
+
+def test_dea_ccr_matches_analytical_ratios():
+    from cbp_sim.dea import run_dea
+    # 1 insumo / 1 produto → θ = (y/x) normalizado pela melhor razão
+    names = ["A", "B", "C", "D"]
+    X = np.array([[1.0], [2.0], [2.0], [4.0]])
+    Y = np.array([[1.0], [1.0], [2.0], [3.0]])
+    r = run_dea(names, X, Y, ["in"], ["out"], model="CCR")
+    assert dict(zip(names, np.round(r.efficiency, 6))) == pytest.approx(
+        {"A": 1.0, "B": 0.5, "C": 1.0, "D": 0.75})
+    assert list(r.is_efficient) == [True, False, True, False]
+
+
+def test_dea_bcc_dominates_ccr_and_envelops_extremes():
+    from cbp_sim.dea import run_dea
+    names = ["A", "B", "C", "D"]
+    X = np.array([[1.0], [2.0], [2.0], [4.0]])
+    Y = np.array([[1.0], [1.0], [2.0], [3.0]])
+    ccr = run_dea(names, X, Y, ["in"], ["out"], model="CCR")
+    bcc = run_dea(names, X, Y, ["in"], ["out"], model="BCC")
+    # retornos variáveis nunca avaliam pior que retornos constantes
+    assert np.all(bcc.efficiency >= ccr.efficiency - 1e-9)
+    # D é extremo da fronteira VRS → eficiente no BCC, ineficiente no CCR
+    assert bcc.efficiency[3] == pytest.approx(1.0)
+    assert ccr.efficiency[3] < 1.0
+
+
+def test_dea_efficient_dmu_references_itself_and_targets():
+    from cbp_sim.dea import run_dea
+    names = ["A", "B"]
+    X = np.array([[1.0], [4.0]])
+    Y = np.array([[1.0], [1.0]])
+    r = run_dea(names, X, Y, ["custo"], ["moe"], model="CCR")
+    assert r.peers[0] == {"A": pytest.approx(1.0)}      # eficiente → si mesma
+    assert "A" in r.peers[1]                            # B deve imitar A
+    # alvo radial de B: θ·x = 0.25 · 4 = 1.0
+    assert r.targets(1)["custo"] == pytest.approx(1.0, abs=1e-6)
+    assert 0.0 < r.efficiency[1] <= 1.0
+
+
+def test_dea_build_matrices_and_discrimination_note():
+    from cbp_sim.dea import (build_matrices, discrimination_note,
+                             DEA_INPUTS, DEA_OUTPUTS)
+    results = [
+        {"package": "P1", "cost": 100.0,
+         "summary": {"mean_blue_losses": 20.0, "mean_turns": 4.0,
+                     "mean_fpsos_surviving": 1.0, "mean_port_integrity": 80.0,
+                     "p_blue_win": 0.5, "mean_red_losses": 40.0}},
+        {"package": "P2", "cost": 120.0,
+         "summary": {"mean_blue_losses": 10.0, "mean_turns": 5.0,
+                     "mean_fpsos_surviving": 2.0, "mean_port_integrity": 90.0,
+                     "p_blue_win": 0.7, "mean_red_losses": 60.0}},
+    ]
+    names, X, Y = build_matrices(results, ["Custo (UC)"],
+                                 ["FPSOs sobreviventes", "P(vitória Azul)"])
+    assert names == ["P1", "P2"]
+    assert X.shape == (2, 1) and Y.shape == (2, 2)
+    assert X[1, 0] == 120.0 and Y[1, 1] == 0.7
+    # regra prática n >= 3(m+s): 2 DMUs, 1+2 dims → alerta
+    assert discrimination_note(2, 1, 2) is not None
+    assert discrimination_note(30, 1, 2) is None
+    with pytest.raises(ValueError):
+        build_matrices(results, [], ["P(vitória Azul)"])
+
+
+def test_dea_handles_zero_valued_metrics():
+    from cbp_sim.dea import run_dea
+    # produtos zerados (ex.: nenhuma FPSO sobrevive) não podem quebrar a LP
+    names = ["A", "B", "C"]
+    X = np.array([[100.0, 30.0], [120.0, 0.0], [90.0, 25.0]])
+    Y = np.array([[0.0, 60.0], [2.0, 90.0], [0.0, 55.0]])
+    r = run_dea(names, X, Y, ["custo", "perdas"], ["fpso", "portos"])
+    assert np.all(np.isfinite(r.efficiency))
+    assert np.all((r.efficiency > 0) & (r.efficiency <= 1.0 + 1e-9))
+
+
+def test_comparison_report_includes_dea_section():
+    from cbp_sim.reporting import comparison_report_md
+    results = [{
+        "package": "Força Base", "description": "ref", "cost": 100.0,
+        "summary": {
+            "p_blue_win": 0.5, "p_blue_win_ci95": (0.4, 0.6),
+            "mean_fpsos_surviving": 1.0, "mean_port_integrity": 80.0,
+            "mean_blue_losses": 20.0, "mean_red_losses": 40.0,
+            "mean_exchange_ratio": 2.0, "mean_turns": 4.0,
+            "p_timeout": 0.0, "n_runs": 5}}]
+    dea = {"model": "BCC", "inputs": ["Custo (UC)"],
+           "outputs": ["P(vitória Azul)"], "names": ["Força Base", "Alt"],
+           "efficiency": [0.8, 1.0],
+           "peers": [{"Alt": 0.9}, {"Alt": 1.0}], "note": "aviso de teste"}
+    md = comparison_report_md(results, dea=dea)
+    assert "Fronteira de eficiência (DEA)" in md
+    assert "BCC" in md and "λ=0.90" in md and "aviso de teste" in md
+    # sem DEA, a seção não aparece
+    assert "Fronteira de eficiência (DEA)" not in comparison_report_md(results)

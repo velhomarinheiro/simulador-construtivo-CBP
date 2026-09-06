@@ -49,6 +49,7 @@ python -m pytest tests/ -q
 | `cbp_sim/bots/` | Bot heurístico, bot ML (clonagem comportamental) e treinador RL (REINFORCE) |
 | `cbp_sim/montecarlo.py` | Lotes de replicações e MOEs |
 | `cbp_sim/cbp.py` | Pacotes de força, custos ilustrativos e perfis de capacidade |
+| `cbp_sim/dea.py` | Análise Envoltória de Dados (CCR/BCC): θ, reference sets e pesos ótimos |
 | `cbp_sim/reporting.py` | Relatórios em Markdown |
 | `cbp_sim/data/` | Ordem de batalha e tabelas de combate (exportadas do wargame) |
 | `tests/` | Testes do núcleo (salva, motor, bots, CBP) |
@@ -77,7 +78,11 @@ python -m pytest tests/ -q
    As MOEs são também **agregadas por grupo de capacidade**: perdas médias
    de SP por componente (ex.: DISS/VIG/ANF), em heatmaps na página e em
    tabelas no relatório comparativo — perdas próprias da força azul e
-   atrito imposto aos componentes da ameaça.
+   atrito imposto aos componentes da ameaça. Uma seção de **fronteira DEA**
+   (modelos CCR e BCC, orientados a insumo) avalia os pacotes com **pesos
+   endógenos**, dispensando a ponderação arbitrária da eficácia composta, e
+   entrega o **reference set** — quais pacotes eficientes um pacote
+   ineficiente deveria imitar, e em que proporção.
 5. **Bots** — ajuste da doutrina heurística (incl. escolta cerrada);
    geração de dataset por self-play e treino por clonagem comportamental;
    refino por **aprendizado por reforço** (lado, temperatura, pesos da

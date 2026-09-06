@@ -43,7 +43,8 @@ with tab_rep:
             [{k: r[k] for k in ("package", "description", "cost", "summary")}
              | {"group_losses": r.get("group_losses")}
              for r in cbp_results],
-            threat=st.session_state.get("cbp_threat"))
+            threat=st.session_state.get("cbp_threat"),
+            dea=st.session_state.get("cbp_dea"))
         with st.expander("Pré-visualizar relatório CBP"):
             st.markdown(report)
         st.download_button("⬇️ Relatório CBP (Markdown)",

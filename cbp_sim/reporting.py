@@ -92,10 +92,46 @@ def batch_report_md(summary: dict, df: pd.DataFrame, *,
     return "\n".join(lines)
 
 
+def _dea_section(dea: dict | None) -> list[str]:
+    """Seção de fronteira DEA, a partir do dict guardado pela página."""
+    if not dea or not dea.get("names"):
+        return []
+    lines = [
+        "",
+        "## Fronteira de eficiência (DEA)",
+        "",
+        f"*Modelo **{dea['model']}** (orientado a insumo). "
+        f"Insumos: {', '.join(dea['inputs'])}. "
+        f"Produtos: {', '.join(dea['outputs'])}. "
+        "Os pesos são endógenos — cada pacote é avaliado sob o conjunto que "
+        "lhe é mais favorável, dispensando a ponderação arbitrária do "
+        "analista.*",
+        "",
+        "| Pacote | θ | Situação | Referências a imitar (peers) |",
+        "|---|---|---|---|",
+    ]
+    ordem = sorted(range(len(dea["names"])),
+                   key=lambda i: -dea["efficiency"][i])
+    for i in ordem:
+        nome = dea["names"][i]
+        th = dea["efficiency"][i]
+        efic = th >= 1.0 - 1e-6
+        peers = {k: v for k, v in (dea["peers"][i] or {}).items() if k != nome}
+        ref = ("— (é referência)" if efic else
+               " · ".join(f"{k} (λ={v:.2f})" for k, v in
+                          sorted(peers.items(), key=lambda kv: -kv[1])) or "—")
+        lines.append(f"| {nome} | {th:.3f} | "
+                     f"{'✅ eficiente' if efic else 'ineficiente'} | {ref} |")
+    if dea.get("note"):
+        lines += ["", f"> ⚠️ {dea['note']}"]
+    return lines
+
+
 def comparison_report_md(results: list[dict], *,
                          title: str = "Análise de Alternativas — "
                                       "Planejamento Baseado em Capacidades",
-                         threat: str | None = None) -> str:
+                         threat: str | None = None,
+                         dea: dict | None = None) -> str:
     """
     Relatório comparativo de pacotes de força.
 
@@ -136,6 +172,8 @@ def comparison_report_md(results: list[dict], *,
             f"{s['mean_port_integrity']:.0f}% | "
             f"{s['mean_blue_losses']:.0f}% | "
             f"{s['mean_exchange_ratio']:.2f} |")
+    lines += _dea_section(dea)
+
     blue_tbl = _group_loss_table(results, "blue")
     red_tbl = _group_loss_table(results, "red")
     if blue_tbl or red_tbl:
