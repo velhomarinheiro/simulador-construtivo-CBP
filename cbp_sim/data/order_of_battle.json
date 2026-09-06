@@ -1,0 +1,2103 @@
+{
+  "forces": {
+    "blue": [
+      {
+        "id": "BLUE-SAG-P",
+        "name": "SAG-P",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_aeródromo",
+            "quantity": 1
+          },
+          {
+            "type": "helicoptero_ASW",
+            "quantity": 4
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 4
+          }
+        ],
+        "stayingPower": 4,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 4,
+          "air": 3,
+          "submarine": 2,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 1,
+          "submarine": 2,
+          "land": 2
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 16,
+            "range": 3
+          }
+        },
+        "capabilities": {
+          "airDefense": 3,
+          "asw": 4,
+          "airAttack": 6
+        },
+        "position": {
+          "col": 3,
+          "row": 4
+        },
+        "notes": "NAM Atlântico + Helicópteros orgânicos. Unidade principal de defesa."
+      },
+      {
+        "id": "BLUE-SAG-S1",
+        "name": "SAG-1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "fragata",
+            "quantity": 3
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 3
+          }
+        ],
+        "stayingPower": 9,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 1,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 1,
+          "land": 1
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 18,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "navalGun": 3,
+          "airDefense": 6,
+          "asw": 3,
+          "airAttack": 3
+        },
+        "position": {
+          "col": 5,
+          "row": 4
+        },
+        "notes": "3x Fragatas Tamandaré."
+      },
+      {
+        "id": "BLUE-SAG-S2",
+        "name": "SAG-2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "fragata",
+            "quantity": 2
+          },
+          {
+            "type": "corveta",
+            "quantity": 2
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 3,
+          "air": 2,
+          "submarine": 1,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 1,
+          "land": 1
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 24,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "navalGun": 4,
+          "airDefense": 6,
+          "asw": 4,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 3,
+          "row": 5
+        },
+        "notes": "2x Fragatas Tamandaré + 2x Corvetas Barroso."
+      },
+      {
+        "id": "BLUE-ANFIB",
+        "name": "ANFIB",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_doca",
+            "quantity": 2
+          },
+          {
+            "type": "navio_desembarque",
+            "quantity": 1
+          },
+          {
+            "type": "helicoptero_ASW",
+            "quantity": 4
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 3,
+          "air": 2,
+          "submarine": 2,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 1,
+          "submarine": 2,
+          "land": 2
+        },
+        "weapons": {},
+        "capabilities": {
+          "navalGun": 3,
+          "airDefense": 3,
+          "asw": 4
+        },
+        "position": {
+          "col": 2,
+          "row": 4
+        },
+        "notes": "NDM Bahia + Oiapoque (LPD) + NCC Sabóia. Transporta BtlLit."
+      },
+      {
+        "id": "BLUE-LOG-A",
+        "name": "APLOG",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_logistico",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 3,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 3,
+          "row": 3
+        },
+        "notes": "NApLog. Sem combate. Reabastece unidades amigas."
+      },
+      {
+        "id": "BLUE-LOG-T",
+        "name": "REAB",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_tanque",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 3,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 5,
+          "row": 1
+        },
+        "notes": "NT Alte Gastão Motta. 40 FP. Só reabastece LOG-A."
+      },
+      {
+        "id": "BLUE-PAT-O1",
+        "name": "PAOC1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_patoc",
+            "quantity": 2
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 4,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 4,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "navalGun": 2,
+          "airDefense": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 7,
+          "row": 1
+        },
+        "notes": "2x NPaOc Apa. ISR oceânico norte da AO."
+      },
+      {
+        "id": "BLUE-PAT-O2",
+        "name": "PAOC2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_patoc",
+            "quantity": 2
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 4,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 4,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "navalGun": 2,
+          "airDefense": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 4,
+          "row": 7
+        },
+        "notes": "2x NPaOc Amazonas. ISR oceânico sul/leste."
+      },
+      {
+        "id": "BLUE-PAT-C1",
+        "name": "PATC1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_patrulha",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 3,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 2,
+            "range": 1
+          }
+        },
+        "capabilities": {
+          "navalGun": 2
+        },
+        "position": {
+          "col": 4,
+          "row": 4
+        },
+        "notes": "2x NPa Macaé. Opera em zona costeira."
+      },
+      {
+        "id": "BLUE-PAT-C2",
+        "name": "PATC2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_patrulha",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 3,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 2,
+            "range": 1
+          }
+        },
+        "capabilities": {
+          "navalGun": 2
+        },
+        "position": {
+          "col": 5,
+          "row": 2
+        },
+        "notes": "4x NPa Grajaú. Opera em zona costeira."
+      },
+      {
+        "id": "BLUE-SUB-N",
+        "name": "SBN",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_nuclear",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 3,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 2,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 2,
+          "land": 1
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 2,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 4,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 12,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 7,
+          "row": 4
+        },
+        "notes": "SNAC Álvaro Alberto. Nuclear, submerso permanente. Posição secreta."
+      },
+      {
+        "id": "BLUE-SUB-1",
+        "name": "SB1",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_convencional",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 6,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 6,
+          "row": 2
+        },
+        "notes": "S40 Riachuelo. Posição secreta."
+      },
+      {
+        "id": "BLUE-SUB-2",
+        "name": "SB2",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_convencional",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 6,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 3,
+          "row": 6
+        },
+        "notes": "S41 Humaitá. Posição secreta."
+      },
+      {
+        "id": "BLUE-SUB-3",
+        "name": "SB3",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_convencional",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 6,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 4,
+          "row": 4
+        },
+        "notes": "S42 Tonelero. Posição secreta."
+      },
+      {
+        "id": "BLUE-SEOP",
+        "name": "OpEsp Azul",
+        "category": "specops",
+        "composition": [
+          {
+            "type": "operacoes_especiais",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 2
+        },
+        "weapons": {
+          "raid": {
+            "quantity": 3,
+            "range": 2
+          }
+        },
+        "capabilities": {},
+        "position": {
+          "col": 6,
+          "row": 2
+        },
+        "hostId": "BLUE-SUB-1",
+        "stealthy": true,
+        "notes": "Equipe de Operações Especiais. Embarcada no SB1."
+      },
+      {
+        "id": "BLUE-MPRA-1",
+        "name": "PATMAR1",
+        "category": "air",
+        "composition": [
+          {
+            "type": "patrulha_maritima",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 12,
+        "detectionRange": {
+          "surface": 4,
+          "air": 1,
+          "submarine": 1,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 4,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 2,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 1,
+          "row": 3
+        },
+        "notes": "P-3AM Orion. Raio 60 hex. ASW + anti-superfície. Base Santos."
+      },
+      {
+        "id": "BLUE-MPRA-2",
+        "name": "PATMAR2",
+        "category": "air",
+        "composition": [
+          {
+            "type": "patrulha_maritima",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 12,
+        "detectionRange": {
+          "surface": 4,
+          "air": 1,
+          "submarine": 1,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 4,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 2,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 1,
+          "row": 3
+        },
+        "notes": "P-3AM Orion. Base Vitória."
+      },
+      {
+        "id": "BLUE-CACA-1",
+        "name": "PAC1",
+        "category": "air",
+        "composition": [
+          {
+            "type": "caca",
+            "quantity": 6
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 7,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 2,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 6,
+          "airAttack": 6
+        },
+        "position": {
+          "col": 0,
+          "row": 3
+        },
+        "notes": "F-39E Gripen 5a ger. Base RJ."
+      },
+      {
+        "id": "BLUE-CACA-2",
+        "name": "PAC2",
+        "category": "air",
+        "composition": [
+          {
+            "type": "caca",
+            "quantity": 6
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 7,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 2,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 6,
+          "airAttack": 6
+        },
+        "position": {
+          "col": 0,
+          "row": 3
+        },
+        "notes": "F-39E Gripen 5a ger. Base Santos."
+      },
+      {
+        "id": "BLUE-CJAT-1",
+        "name": "APAER1",
+        "category": "air",
+        "composition": [
+          {
+            "type": "ataque",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 5,
+        "detectionRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 4,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "lacm": {
+            "quantity": 2,
+            "range": 10
+          }
+        },
+        "capabilities": {
+          "airAttack": 2
+        },
+        "position": {
+          "col": 3,
+          "row": 3
+        },
+        "notes": "AF-1 A-4 Skyhawk 4a ger. Buddy-tank. Base Santos/NAM."
+      },
+      {
+        "id": "BLUE-CJAT-2",
+        "name": "APAER2",
+        "category": "air",
+        "composition": [
+          {
+            "type": "ataque",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 5,
+        "detectionRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 1
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 4,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "lacm": {
+            "quantity": 2,
+            "range": 10
+          }
+        },
+        "capabilities": {
+          "airAttack": 2
+        },
+        "position": {
+          "col": 3,
+          "row": 3
+        },
+        "notes": "AF-1 A-4 Skyhawk 4a ger. Base Vitória."
+      },
+      {
+        "id": "BLUE-DCOST1",
+        "name": "DEFCOST1",
+        "category": "land",
+        "composition": [
+          {
+            "type": "bateria_costeira",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 1,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 10,
+            "range": 3
+          }
+        },
+        "capabilities": {
+          "airDefense": 2
+        },
+        "position": {
+          "col": 4,
+          "row": 2
+        },
+        "notes": "2x Baterias MANSUP-ER costeiras. Fixo. Raio 5 hex."
+      },
+      {
+        "id": "BLUE-DCOST2",
+        "name": "DEFCOST2",
+        "category": "land",
+        "composition": [
+          {
+            "type": "bateria_costeira",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 1,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 10,
+            "range": 3
+          }
+        },
+        "capabilities": {
+          "airDefense": 2
+        },
+        "position": {
+          "col": 1,
+          "row": 4
+        },
+        "notes": "2x Baterias MANSUP-ER costeiras. Fixo. Raio 5 hex."
+      },
+      {
+        "id": "BLUE-ADA-1",
+        "name": "BDA1",
+        "category": "land",
+        "composition": [
+          {
+            "type": "base_naval",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 1,
+        "detectionRange": {
+          "surface": 1,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 6,
+          "bmd": 2
+        },
+        "position": {
+          "col": 3,
+          "row": 1
+        },
+        "notes": "1x Btl ADA EB SHORAD/MANPADS. Rio de Janeiro."
+      },
+      {
+        "id": "BLUE-ADA-2",
+        "name": "BDA2",
+        "category": "land",
+        "composition": [
+          {
+            "type": "base_naval",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 1,
+        "detectionRange": {
+          "surface": 1,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 6,
+          "bmd": 2
+        },
+        "position": {
+          "col": 0,
+          "row": 5
+        },
+        "notes": "1x Btl ADA EB GBAD Médio. Santos."
+      },
+      {
+        "id": "BLUE-FPSO1",
+        "name": "FPSO1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "plataforma",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 6,
+          "row": 3
+        }
+      },
+      {
+        "id": "BLUE-FPSO2",
+        "name": "FPSO2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "plataforma",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 5,
+          "row": 3
+        }
+      },
+      {
+        "id": "BLUE-FPSO3",
+        "name": "FPSO3",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "plataforma",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 4,
+          "row": 5
+        }
+      },
+      {
+        "id": "BLUE-FPSO4",
+        "name": "FPSO4",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "plataforma",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 2,
+          "row": 6
+        }
+      },
+      {
+        "id": "BLUE-PORTO-S",
+        "name": "Porto de Santos",
+        "category": "land",
+        "composition": [
+          {
+            "type": "porto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 20,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 0,
+          "row": 5
+        },
+        "notes": "Porto de Santos. SP=20. Hub logístico sul."
+      },
+      {
+        "id": "BLUE-PORTO-RJ",
+        "name": "Porto do Rio de Janeiro",
+        "category": "land",
+        "composition": [
+          {
+            "type": "porto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 20,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 2,
+          "row": 4
+        },
+        "notes": "Porto do RJ. SP=20. Hub naval central."
+      },
+      {
+        "id": "BLUE-PORTO-V",
+        "name": "Porto de Vitória",
+        "category": "land",
+        "composition": [
+          {
+            "type": "porto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 16,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 5,
+          "row": 1
+        },
+        "notes": "Porto de Vitória. SP=16."
+      },
+      {
+        "id": "BLUE-PORTO-ACU",
+        "name": "Porto do Açu",
+        "category": "land",
+        "composition": [
+          {
+            "type": "porto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 12,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 4,
+          "row": 3
+        },
+        "notes": "Porto do Açu. SP=12. Terminal offshore."
+      },
+      {
+        "id": "BLUE-AERO-RJ",
+        "name": "BA Santa Cruz",
+        "category": "land",
+        "composition": [
+          {
+            "type": "aeroporto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 0,
+          "row": 3
+        },
+        "notes": "Base Aérea de Santa Cruz / Galeão. Fixo. Recompletamento F-39 Gripen."
+      },
+      {
+        "id": "BLUE-AERO-SP",
+        "name": "BA Santos",
+        "category": "land",
+        "composition": [
+          {
+            "type": "aeroporto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 1,
+          "row": 3
+        },
+        "notes": "Base Aérea de Santos / Campo de Marte. Fixo. Recompletamento P-3AM."
+      },
+      {
+        "id": "BLUE-AERO-CF",
+        "name": "AeroCF/BANS",
+        "category": "land",
+        "composition": [
+          {
+            "type": "aeroporto",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 0,
+        "detectionRange": {
+          "surface": 1,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 2,
+          "row": 3
+        },
+        "notes": "Aeroporto de Cabo Frio + BAN São Pedro da Aldeia. Fixo. Alternativa de recompletamento."
+      }
+    ],
+    "red": [
+      {
+        "id": "RED-GBPA",
+        "name": "CSG",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_aeródromo",
+            "quantity": 1
+          },
+          {
+            "type": "helicoptero_ASup",
+            "quantity": 6
+          },
+          {
+            "type": "helicoptero_ASW",
+            "quantity": 6
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 5,
+          "air": 4,
+          "submarine": 2,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 4,
+          "air": 1,
+          "submarine": 2,
+          "land": 2
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 10,
+            "range": 3
+          }
+        },
+        "capabilities": {
+          "airDefense": 3,
+          "asw": 6,
+          "airAttack": 8
+        },
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "notes": "KCV Aurelius Magnus"
+      },
+      {
+        "id": "RED-GE-1",
+        "name": "ESCCSG",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "cruzador",
+            "quantity": 1
+          },
+          {
+            "type": "destroyer",
+            "quantity": 2
+          },
+          {
+            "type": "helicoptero_ASW",
+            "quantity": 6
+          }
+        ],
+        "stayingPower": 12,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 3,
+          "air": 2,
+          "submarine": 2,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 6,
+          "air": 1,
+          "submarine": 2,
+          "land": 8
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 14,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 18,
+            "range": 3
+          },
+          "lacm": {
+            "quantity": 8,
+            "range": 10
+          }
+        },
+        "capabilities": {
+          "navalGun": 6,
+          "airDefense": 13,
+          "bmd": 4,
+          "asw": 11
+        },
+        "position": {
+          "col": 14,
+          "row": 1
+        },
+        "notes": "1x CG Drakhmar + 2x DDG Volnaria. SAM/BMD/ASCM."
+      },
+      {
+        "id": "RED-GE-2",
+        "name": "SAG1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "destroyer",
+            "quantity": 1
+          },
+          {
+            "type": "fragata",
+            "quantity": 2
+          },
+          {
+            "type": "helicoptero_ASW",
+            "quantity": 4
+          }
+        ],
+        "stayingPower": 10,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 3,
+          "air": 2,
+          "submarine": 2,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 6,
+          "air": 1,
+          "submarine": 2,
+          "land": 8
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 8,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 12,
+            "range": 3
+          },
+          "lacm": {
+            "quantity": 2,
+            "range": 10
+          }
+        },
+        "capabilities": {
+          "navalGun": 4,
+          "airDefense": 8,
+          "bmd": 1,
+          "asw": 8
+        },
+        "position": {
+          "col": 14,
+          "row": 2
+        },
+        "notes": "1x CG Drakhmar + 2x DDG Volnaria. Espelhado com GE-1."
+      },
+      {
+        "id": "RED-GE-3",
+        "name": "SAG2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "fragata",
+            "quantity": 3
+          }
+        ],
+        "stayingPower": 9,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 1,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 1,
+          "land": 1
+        },
+        "weapons": {
+          "mss": {
+            "quantity": 12,
+            "range": 3
+          }
+        },
+        "capabilities": {
+          "navalGun": 3,
+          "airDefense": 6,
+          "asw": 3
+        },
+        "position": {
+          "col": 14,
+          "row": 0
+        },
+        "notes": "3x Fragatas Cl. Volnaria. Escolta de reserva."
+      },
+      {
+        "id": "RED-AOR-G",
+        "name": "REAB",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_tanque",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 3,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 15,
+          "row": 0
+        },
+        "notes": "AOR Cl. Korvas. Reabastecedor primário do GBPA. Proteger."
+      },
+      {
+        "id": "RED-GANF",
+        "name": "ANFIB-E",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_doca",
+            "quantity": 2
+          },
+          {
+            "type": "navio_desembarque",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 14,
+        "movement": 3,
+        "detectionRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 2
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 1,
+          "submarine": 0,
+          "land": 2
+        },
+        "weapons": {},
+        "capabilities": {
+          "navalGun": 4,
+          "airDefense": 4
+        },
+        "position": {
+          "col": 15,
+          "row": 2
+        },
+        "notes": "1x LPD Harnax + 2x LST Morvask. Carrega BdaIN. Crítico."
+      },
+      {
+        "id": "RED-GLOG",
+        "name": "LOG1",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_logistico",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 15,
+          "row": 3
+        },
+        "notes": "AOR Korvas + AOT Brennar. Abastecimento no mar. Alvo prioritário adversário."
+      },
+      {
+        "id": "RED-AKE",
+        "name": "LOG2",
+        "category": "surface",
+        "composition": [
+          {
+            "type": "navio_logistico",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 6,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 1,
+          "air": 1,
+          "submarine": 0,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 15,
+          "row": 4
+        },
+        "notes": "AKE Cl. Yarven. Navio de munições: reabastece unidades empilhadas ao fim do turno. Alvo do objetivo logístico Azul — proteger."
+      },
+      {
+        "id": "RED-KSN",
+        "name": "SBN",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_nuclear",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 3,
+        "movement": 4,
+        "detectionRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 2,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 3,
+          "air": 0,
+          "submarine": 2,
+          "land": 8
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 8,
+            "range": 6
+          },
+          "torpedo": {
+            "quantity": 12,
+            "range": 2
+          },
+          "lacm": {
+            "quantity": 4,
+            "range": 10
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 13,
+          "row": 2
+        },
+        "notes": "KAR Veylan (SSN). Nuclear, submerso permanente. Posição secreta."
+      },
+      {
+        "id": "RED-KS-1",
+        "name": "SB",
+        "category": "submarine",
+        "composition": [
+          {
+            "type": "submarino_convencional",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 4,
+            "range": 6
+          },
+          "torpedo": {
+            "quantity": 6,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 1
+        },
+        "position": {
+          "col": 1,
+          "row": 8
+        },
+        "notes": "KAR Skarn. Posição secreta."
+      },
+      {
+        "id": "RED-KMF-1",
+        "name": "PAC1",
+        "category": "air",
+        "composition": [
+          {
+            "type": "caca",
+            "quantity": 8
+          }
+        ],
+        "stayingPower": 8,
+        "movement": 6,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 8,
+          "airAttack": 8
+        },
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "embarked": "RED-GBPA",
+        "notes": "KMF-22 Sturmadler 4.5a ger. Embarcado no KCV. Raio 20 hex."
+      },
+      {
+        "id": "RED-KMF-2",
+        "name": "PAC2",
+        "category": "air",
+        "composition": [
+          {
+            "type": "caca",
+            "quantity": 8
+          }
+        ],
+        "stayingPower": 8,
+        "movement": 6,
+        "detectionRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 2,
+          "submarine": 0,
+          "land": 1
+        },
+        "weapons": {},
+        "capabilities": {
+          "airDefense": 8,
+          "airAttack": 8
+        },
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "embarked": "RED-GBPA",
+        "notes": "KMF-22 Sturmadler 4.5a ger. Embarcado no KCV."
+      },
+      {
+        "id": "RED-MPRA-K1",
+        "name": "PATMAR1",
+        "category": "air",
+        "composition": [
+          {
+            "type": "patrulha_maritima",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 10,
+        "detectionRange": {
+          "surface": 3,
+          "air": 1,
+          "submarine": 2,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 2,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 2,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "embarked": "RED-GBPA"
+      },
+      {
+        "id": "RED-MPRA-K2",
+        "name": "PATMAR2",
+        "category": "air",
+        "composition": [
+          {
+            "type": "patrulha_maritima",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 10,
+        "detectionRange": {
+          "surface": 3,
+          "air": 1,
+          "submarine": 2,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 2,
+          "air": 0,
+          "submarine": 1,
+          "land": 0
+        },
+        "weapons": {
+          "ascm": {
+            "quantity": 2,
+            "range": 6
+          },
+          "mss": {
+            "quantity": 2,
+            "range": 2
+          },
+          "torpedo": {
+            "quantity": 2,
+            "range": 2
+          }
+        },
+        "capabilities": {
+          "asw": 2,
+          "airAttack": 2
+        },
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "embarked": "RED-GBPA",
+        "notes": "K-32 Stormwatch. Raio 60 hex. ASW + anti-superfície. Embarcado KCV."
+      },
+      {
+        "id": "RED-AWACS-K",
+        "name": "AWACS",
+        "category": "air",
+        "composition": [
+          {
+            "type": "aew",
+            "quantity": 2
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 8,
+        "detectionRange": {
+          "surface": 3,
+          "air": 4,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 0
+        },
+        "weapons": {},
+        "capabilities": {},
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "embarked": "RED-GBPA",
+        "notes": "K-99 Argus. Raio ISR 9 hex. Crítico. Embarcado KCV."
+      },
+      {
+        "id": "RED-SEOP",
+        "name": "OpEsp Verm",
+        "category": "specops",
+        "composition": [
+          {
+            "type": "operacoes_especiais",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 2
+        },
+        "weapons": {
+          "raid": {
+            "quantity": 3,
+            "range": 2
+          }
+        },
+        "capabilities": {},
+        "position": {
+          "col": 15,
+          "row": 1
+        },
+        "hostId": "RED-GBPA",
+        "stealthy": true,
+        "notes": "Equipe de Operações Especiais. Embarcada no CSG."
+      },
+      {
+        "id": "RED-SEOP-2",
+        "name": "OpEsp Verm 2",
+        "category": "specops",
+        "composition": [
+          {
+            "type": "operacoes_especiais",
+            "quantity": 1
+          }
+        ],
+        "stayingPower": 2,
+        "movement": 2,
+        "detectionRange": {
+          "surface": 0,
+          "air": 0,
+          "submarine": 0,
+          "land": 1
+        },
+        "attackRange": {
+          "surface": 1,
+          "air": 0,
+          "submarine": 0,
+          "land": 2
+        },
+        "weapons": {
+          "raid": {
+            "quantity": 3,
+            "range": 2
+          }
+        },
+        "capabilities": {},
+        "position": {
+          "col": 1,
+          "row": 8
+        },
+        "hostId": "RED-KS-1",
+        "stealthy": true,
+        "notes": "Equipe de Operações Especiais. Embarcada no submarino convencional."
+      }
+    ]
+  }
+}
