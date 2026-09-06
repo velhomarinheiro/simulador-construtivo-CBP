@@ -1,0 +1,6 @@
+sessao,jogador,lado,turno,periodo,estado_alvo,obs_vars,leitura,ctrl_vars,grupo_esforco,prioridade,objetivo_proprio,confianca,mudou,motivo
+EXEMPLO-01,P07,blue,1,dia,Cobrir as FPSOs antes do contato,sp_proprio;contatos;objetivos,Sem contato firme; adversário provavelmente a leste,deslocar;escoltar,VIG,carrier>logistics>surface>amphib>nucsub,,6,0,
+EXEMPLO-01,P07,blue,2,noite,Manter escolta e buscar o grupo anfíbio,sp_proprio;sp_inimigo;contatos;fp,Contato com escolta inimiga a 4 hex,deslocar;atacar,INTERV,carrier>logistics>surface>amphib>nucsub,,7,0,
+EXEMPLO-01,P07,blue,3,dia,Preservar as plataformas — perdi FPSO-1,sp_inimigo;objetivos;contatos,Perdi FPSO-1; a ameaça vem do sul,escoltar;recuar,VIG,logistics>carrier>surface>amphib>nucsub,Impedir nova perda de FPSO,5,1,Perda da FPSO-1 mostrou que a cobertura estava mal posicionada
+EXEMPLO-02,P08,red,1,dia,Aproximar o grupo de batalha do litoral,sp_proprio;posicao;periodo,Ainda fora do alcance da defesa costeira,deslocar,INTERV,fpsos>ports,,7,0,
+EXEMPLO-02,P08,red,2,noite,Saturar a defesa antes de atacar as plataformas,sp_inimigo;contatos;municao,Detectei duas escoltas; noite favorece a aproximação,deslocar;atacar,VIG,fpsos>ports,,8,0,
